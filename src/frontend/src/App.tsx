@@ -19,7 +19,10 @@ import {
   Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useIncrementVisitorCount } from "./hooks/useQueries";
+import {
+  useGetVisitorCount,
+  useIncrementVisitorCount,
+} from "./hooks/useQueries";
 
 // ── Smoke Canvas ─────────────────────────────────────────────────────────────
 interface SmokeBlob {
@@ -1255,6 +1258,201 @@ function VisionSection() {
   );
 }
 
+// ── Visitor Counter Section ───────────────────────────────────────────────────
+function VisitorCounterSection() {
+  const { data: visitorCount, isLoading } = useGetVisitorCount();
+  const [displayCount, setDisplayCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const revealRef = useScrollReveal(0.2);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (
+          entry.isIntersecting &&
+          !hasAnimated &&
+          !isLoading &&
+          visitorCount !== undefined
+        ) {
+          setHasAnimated(true);
+          const target = Number(visitorCount);
+          const duration = 1500;
+          const startTime = performance.now();
+
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease-out cubic
+            const eased = 1 - (1 - progress) ** 3;
+            setDisplayCount(Math.floor(eased * target));
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setDisplayCount(target);
+            }
+          };
+
+          requestAnimationFrame(animate);
+          observer.unobserve(section);
+        }
+      },
+      { threshold: 0.2 },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [isLoading, visitorCount, hasAnimated]);
+
+  const formatNumber = (n: number) => n.toLocaleString("en-US");
+
+  return (
+    <section
+      id="visitors"
+      ref={sectionRef}
+      data-ocid="visitors.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Top divider line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+      {/* Bottom divider line */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+
+      {/* Ambient glow behind counter */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 700,
+          height: 400,
+          background:
+            "radial-gradient(circle, rgba(225,0,0,0.15) 0%, transparent 70%)",
+          filter: "blur(40px)",
+        }}
+      />
+
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.7) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-12 text-center">
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal"
+        >
+          {/* Section label */}
+          <div className="inline-flex items-center gap-3 mb-10">
+            <span
+              className="h-px w-12"
+              style={{
+                background: "var(--red-bright)",
+                boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+              }}
+            />
+            <span
+              className="font-display text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "var(--red-bright)" }}
+            >
+              Global Reach
+            </span>
+            <span
+              className="h-px w-12"
+              style={{
+                background: "var(--red-bright)",
+                boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+              }}
+            />
+          </div>
+
+          {/* Counter number */}
+          <div className="relative inline-block">
+            {/* Pulsing glow behind number */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(225,0,0,0.2) 0%, transparent 70%)",
+                filter: "blur(30px)",
+                animation: "profile-glow-pulse 3s ease-in-out infinite",
+              }}
+            />
+            <div
+              data-ocid="visitors.counter"
+              className="font-bebas relative"
+              style={{
+                fontSize: "clamp(5rem, 15vw, 10rem)",
+                lineHeight: 0.9,
+                color: "var(--red-bright)",
+                textShadow:
+                  "0 0 30px rgba(225,0,0,0.9), 0 0 80px rgba(225,0,0,0.5), 0 0 160px rgba(225,0,0,0.18)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {isLoading ? "---" : formatNumber(displayCount)}
+            </div>
+          </div>
+
+          {/* TOTAL VISITORS label */}
+          <p
+            className="font-bebas tracking-widest mt-4"
+            style={{
+              fontSize: "clamp(1rem, 2.5vw, 1.6rem)",
+              color: "rgba(255,255,255,0.75)",
+              letterSpacing: "0.2em",
+            }}
+          >
+            TOTAL VISITORS
+          </p>
+
+          {/* Subline */}
+          <p
+            className="font-body mt-3 mx-auto"
+            style={{
+              fontSize: "clamp(0.85rem, 1.4vw, 1rem)",
+              color: "rgba(255,255,255,0.38)",
+              letterSpacing: "0.05em",
+              maxWidth: "320px",
+            }}
+          >
+            People who have discovered this site
+          </p>
+
+          {/* Decorative bottom line */}
+          <div
+            className="mt-10 mx-auto h-px"
+            style={{
+              maxWidth: "200px",
+              background:
+                "linear-gradient(90deg, transparent, rgba(225,0,0,0.6), transparent)",
+              boxShadow: "0 0 8px rgba(225,0,0,0.3)",
+            }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── WhatsApp SVG Icon ─────────────────────────────────────────────────────────
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -1561,6 +1759,7 @@ export default function App() {
         <AboutSection />
         <SkillsSection />
         <VisionSection />
+        <VisitorCounterSection />
         <ContactSection />
       </main>
       <Footer />
