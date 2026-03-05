@@ -1,19 +1,16 @@
 import { Toaster } from "@/components/ui/sonner";
 import {
-  AlertCircle,
-  CheckCircle2,
   ChevronDown,
   Github,
   Instagram,
   Lightbulb,
   Linkedin,
-  Loader2,
+  Mail,
   Megaphone,
   Menu,
   Mic2,
   Palette,
   Puzzle,
-  Send,
   TrendingUp,
   Twitter,
   Users,
@@ -22,11 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import {
-  useIncrementVisitorCount,
-  useSubmitContactForm,
-} from "./hooks/useQueries";
+import { useIncrementVisitorCount } from "./hooks/useQueries";
 
 // ── Smoke Canvas ─────────────────────────────────────────────────────────────
 interface SmokeBlob {
@@ -681,6 +674,7 @@ function AboutSection() {
   const revealRef = useScrollReveal();
   const revealLeftRef = useScrollReveal();
   const revealRightRef = useScrollReveal();
+  const storyRef = useScrollReveal(0.15);
 
   return (
     <section
@@ -706,12 +700,29 @@ function AboutSection() {
           ref={revealRef as React.RefObject<HTMLDivElement>}
           className="scroll-reveal mb-16"
         >
+          {/* Official website badge */}
+          <div className="inline-flex items-center gap-2 mb-5">
+            <span
+              className="inline-block w-6 h-px"
+              style={{ background: "var(--red-bright)" }}
+            />
+            <span
+              className="font-display text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "var(--red-bright)" }}
+            >
+              Official Personal Website
+            </span>
+            <span
+              className="inline-block w-6 h-px"
+              style={{ background: "var(--red-bright)" }}
+            />
+          </div>
           <h2 className="font-bebas text-5xl md:text-6xl lg:text-7xl tracking-wider text-white red-underline">
             ABOUT ME
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-start">
           {/* Left: Bio text */}
           <div
             ref={revealLeftRef as React.RefObject<HTMLDivElement>}
@@ -721,28 +732,47 @@ function AboutSection() {
               className="font-body leading-relaxed mb-6"
               style={{
                 fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)",
-                color: "rgba(255,255,255,0.8)",
+                color: "rgba(255,255,255,0.85)",
                 lineHeight: 1.9,
               }}
             >
-              I'm{" "}
               <span style={{ color: "var(--red-bright)", fontWeight: 700 }}>
                 Rupesh Thakur
               </span>{" "}
-              — a relentless builder, creative thinker, and problem solver. I
-              don't follow trends; I set them.
+              is a digital creator, brand builder, and visionary focused on
+              turning bold ideas into real-world impact. With a relentless drive
+              to create, he has built his presence from the ground up — one
+              step, one project, one connection at a time.
             </p>
             <p
-              className="font-body leading-relaxed mb-8"
+              className="font-body leading-relaxed mb-6"
               style={{
                 fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)",
                 color: "rgba(255,255,255,0.7)",
                 lineHeight: 1.9,
               }}
             >
-              With a passion for innovation and an obsession with excellence, I
-              turn ideas into impact. Every challenge is an opportunity. Every
-              setback, a setup for a comeback.
+              This is the{" "}
+              <span style={{ color: "var(--red-bright)", fontWeight: 700 }}>
+                official personal website of Rupesh Thakur
+              </span>{" "}
+              — the one place where you can explore his work, vision, skills,
+              and get in touch directly.
+            </p>
+            <p
+              className="font-body leading-relaxed mb-8"
+              style={{
+                fontSize: "clamp(1.05rem, 1.5vw, 1.2rem)",
+                color: "rgba(255,255,255,0.6)",
+                lineHeight: 1.9,
+              }}
+            >
+              He believes that every big empire starts with a single decision —
+              the decision to{" "}
+              <span style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
+                begin
+              </span>
+              . And he began.
             </p>
 
             {/* Stats row */}
@@ -839,6 +869,138 @@ function AboutSection() {
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
                 — Rupesh Thakur
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Inspiring Story Block */}
+        <div
+          ref={storyRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal mt-20 md:mt-28"
+        >
+          {/* Story label */}
+          <div className="flex items-center gap-4 mb-8">
+            <span
+              className="h-px flex-1 max-w-12"
+              style={{ background: "rgba(225,0,0,0.4)" }}
+            />
+            <span
+              className="font-display text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "rgba(225,0,0,0.8)" }}
+            >
+              The Story
+            </span>
+            <span
+              className="h-px flex-1"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(225,0,0,0.4), transparent)",
+              }}
+            />
+          </div>
+
+          <div
+            className="relative p-8 md:p-12"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(15,0,0,0.9) 0%, rgba(5,5,5,0.98) 100%)",
+              border: "1px solid rgba(225,0,0,0.15)",
+              boxShadow:
+                "0 0 60px rgba(225,0,0,0.06), inset 0 0 80px rgba(0,0,0,0.5)",
+            }}
+          >
+            {/* Decorative vertical red line */}
+            <div
+              className="absolute left-0 top-8 bottom-8 w-1"
+              style={{
+                background:
+                  "linear-gradient(to bottom, transparent, var(--red-bright), transparent)",
+                boxShadow: "0 0 12px rgba(225,0,0,0.5)",
+              }}
+            />
+
+            <h3
+              className="font-bebas text-3xl md:text-4xl tracking-wider mb-6 pl-6"
+              style={{
+                color: "#fff",
+                textShadow: "0 0 20px rgba(225,0,0,0.2)",
+              }}
+            >
+              BUILDING SOMETHING BIG FROM{" "}
+              <span
+                style={{
+                  color: "var(--red-bright)",
+                  textShadow:
+                    "0 0 16px rgba(225,0,0,0.7), 0 0 40px rgba(225,0,0,0.3)",
+                }}
+              >
+                NOTHING
+              </span>
+            </h3>
+
+            <div className="pl-6 space-y-5">
+              <p
+                className="font-body leading-relaxed"
+                style={{
+                  fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
+                  color: "rgba(255,255,255,0.75)",
+                  lineHeight: 1.95,
+                }}
+              >
+                There was no blueprint. No wealthy background. No shortcut. Just
+                a person with a fire inside and an unshakeable belief that
+                things could be different. That{" "}
+                <span
+                  style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
+                >
+                  he
+                </span>{" "}
+                could be different.
+              </p>
+              <p
+                className="font-body leading-relaxed"
+                style={{
+                  fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
+                  color: "rgba(255,255,255,0.65)",
+                  lineHeight: 1.95,
+                }}
+              >
+                Rupesh started with nothing but ambition — navigating
+                uncertainty, learning from every failure, and refusing to let
+                doubt become a destination. While others waited for the perfect
+                moment, he worked in the silence, building brick by brick when
+                no one was watching.
+              </p>
+              <p
+                className="font-body leading-relaxed"
+                style={{
+                  fontSize: "clamp(1rem, 1.4vw, 1.15rem)",
+                  color: "rgba(255,255,255,0.65)",
+                  lineHeight: 1.95,
+                }}
+              >
+                Every skill, every project, every connection was earned — not
+                given. And the journey is far from over. This website is a
+                living proof that{" "}
+                <span
+                  style={{
+                    color: "var(--red-bright)",
+                    fontWeight: 700,
+                    textShadow: "0 0 12px rgba(225,0,0,0.4)",
+                  }}
+                >
+                  something big is being built here.
+                </span>
+              </p>
+              <p
+                className="font-bebas text-xl md:text-2xl tracking-wider pt-2"
+                style={{
+                  color: "rgba(255,255,255,0.5)",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                The foundation is laid. The rise has begun.
               </p>
             </div>
           </div>
@@ -1093,53 +1255,64 @@ function VisionSection() {
   );
 }
 
+// ── WhatsApp SVG Icon ─────────────────────────────────────────────────────────
+function WhatsAppIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg
+      role="img"
+      aria-label="WhatsApp"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>WhatsApp</title>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
+}
+
 // ── Contact Section ───────────────────────────────────────────────────────────
 function ContactSection() {
   const headerRef = useScrollReveal();
-  const formRef = useScrollReveal();
+  const buttonsRef = useScrollReveal();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState<{
-    name?: string;
-    email?: string;
-    message?: string;
-  }>({});
-  const [submitted, setSubmitted] = useState(false);
-
-  const { mutate: submitForm, isPending, isError } = useSubmitContactForm();
-
-  const validate = () => {
-    const newErrors: typeof errors = {};
-    if (!name.trim()) newErrors.name = "Name is required.";
-    if (!email.trim()) newErrors.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      newErrors.email = "Enter a valid email.";
-    if (!message.trim()) newErrors.message = "Message is required.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    submitForm(
-      { name, email, message },
-      {
-        onSuccess: () => {
-          setSubmitted(true);
-          setName("");
-          setEmail("");
-          setMessage("");
-          setErrors({});
-        },
-        onError: () => {
-          toast.error("Failed to send message. Please try again.");
-        },
-      },
-    );
-  };
+  const contactChannels = [
+    {
+      id: "whatsapp",
+      label: "WhatsApp",
+      sublabel: "Message directly",
+      icon: <WhatsAppIcon size={28} />,
+      href: "https://wa.me/message/DIRECT",
+      color: "#25D366",
+      glowColor: "rgba(37,211,102,0.35)",
+      borderColor: "rgba(37,211,102,0.3)",
+      hoverBorder: "rgba(37,211,102,0.7)",
+    },
+    {
+      id: "instagram",
+      label: "Instagram",
+      sublabel: "Follow & DM",
+      icon: <Instagram size={28} />,
+      href: "https://instagram.com/rupeshthakur",
+      color: "#E1306C",
+      glowColor: "rgba(225,48,108,0.35)",
+      borderColor: "rgba(225,48,108,0.3)",
+      hoverBorder: "rgba(225,48,108,0.7)",
+    },
+    {
+      id: "email",
+      label: "Email",
+      sublabel: "Send a message",
+      icon: <Mail size={28} />,
+      href: "mailto:rupeshthakur@email.com",
+      color: "var(--red-bright)",
+      glowColor: "rgba(225,0,0,0.35)",
+      borderColor: "rgba(225,0,0,0.3)",
+      hoverBorder: "rgba(225,0,0,0.7)",
+    },
+  ];
 
   return (
     <section
@@ -1148,7 +1321,7 @@ function ContactSection() {
       className="relative py-24 md:py-36"
       style={{ background: "#000" }}
     >
-      {/* FIX 3 — Top bleed vignette */}
+      {/* Top bleed vignette */}
       <div
         className="absolute top-0 left-0 right-0 h-24 pointer-events-none z-10"
         style={{
@@ -1188,251 +1361,72 @@ function ContactSection() {
             className="mt-8 font-body max-w-md mx-auto"
             style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}
           >
-            Have an idea, a project, or just want to say hello? I'd love to hear
-            from you.
+            Reach out directly — choose your preferred channel below.
           </p>
         </div>
 
-        {/* Form / Success */}
+        {/* Contact buttons */}
         <div
-          ref={formRef as React.RefObject<HTMLDivElement>}
-          className="scroll-reveal"
+          ref={buttonsRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal flex flex-col sm:flex-row gap-5 justify-center"
         >
-          {submitted ? (
-            <div
-              data-ocid="contact.success_state"
-              className="text-center py-16 px-8"
+          {contactChannels.map((ch) => (
+            <a
+              key={ch.id}
+              href={ch.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-ocid={`contact.${ch.id}.button`}
+              className="group flex-1 flex flex-col items-center gap-3 py-10 px-6 transition-all duration-300 cursor-pointer"
               style={{
-                background: "rgba(10,10,10,0.9)",
-                border: "1px solid rgba(225,0,0,0.25)",
+                background: "rgba(10,10,10,0.95)",
+                border: `1px solid ${ch.borderColor}`,
                 borderRadius: 4,
-                boxShadow: "0 0 40px rgba(225,0,0,0.08)",
+                boxShadow: `0 0 20px ${ch.glowColor.replace("0.35", "0.06")}`,
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.border = `1px solid ${ch.hoverBorder}`;
+                el.style.boxShadow = `0 0 32px ${ch.glowColor}, 0 0 80px ${ch.glowColor.replace("0.35", "0.12")}`;
+                el.style.transform = "translateY(-4px)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.border = `1px solid ${ch.borderColor}`;
+                el.style.boxShadow = `0 0 20px ${ch.glowColor.replace("0.35", "0.06")}`;
+                el.style.transform = "translateY(0)";
               }}
             >
-              <CheckCircle2
-                size={48}
-                className="mx-auto mb-5"
-                style={{ color: "var(--red-bright)" }}
-              />
-              <h3
-                className="font-bebas text-3xl tracking-wider mb-3"
-                style={{ color: "#fff" }}
+              {/* Icon */}
+              <div
+                className="flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300"
+                style={{
+                  background: `${ch.glowColor.replace("0.35", "0.12")}`,
+                  border: `1px solid ${ch.borderColor}`,
+                  color: ch.color,
+                }}
               >
-                MESSAGE SENT!
-              </h3>
-              <p
-                className="font-body"
-                style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.95rem" }}
-              >
-                Thank you for reaching out. I'll get back to you shortly.
-              </p>
-              <button
-                type="button"
-                className="mt-8 btn-outline-red px-6 py-3 text-sm"
-                style={{ borderRadius: 2 }}
-                onClick={() => setSubmitted(false)}
-              >
-                Send Another
-              </button>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-6"
-              style={{
-                background: "rgba(10,10,10,0.9)",
-                border: "1px solid rgba(40,40,40,0.8)",
-                padding: "clamp(1.5rem, 4vw, 3rem)",
-                borderRadius: 4,
-              }}
-            >
-              {/* Name */}
-              <div>
-                <label
-                  htmlFor="contact-name"
-                  className="block font-display text-sm font-semibold tracking-widest uppercase mb-2"
-                  style={{ color: "rgba(255,255,255,0.6)" }}
-                >
-                  Full Name
-                </label>
-                <input
-                  id="contact-name"
-                  data-ocid="contact.input"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="w-full px-4 py-3 font-body text-sm outline-none transition-all duration-300"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: errors.name
-                      ? "1px solid rgba(225,0,0,0.6)"
-                      : "1px solid rgba(80,80,80,0.5)",
-                    borderRadius: 2,
-                    color: "#fff",
-                    fontSize: "0.95rem",
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.name)
-                      e.currentTarget.style.borderColor = "rgba(225,0,0,0.4)";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 12px rgba(225,0,0,0.1)";
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.name)
-                      e.currentTarget.style.borderColor = "rgba(80,80,80,0.5)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                />
-                {errors.name && (
-                  <p
-                    className="mt-1.5 text-xs flex items-center gap-1"
-                    style={{ color: "var(--red-bright)" }}
-                  >
-                    <AlertCircle size={12} /> {errors.name}
-                  </p>
-                )}
+                {ch.icon}
               </div>
 
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="contact-email"
-                  className="block font-display text-sm font-semibold tracking-widest uppercase mb-2"
-                  style={{ color: "rgba(255,255,255,0.6)" }}
+              {/* Label */}
+              <div className="text-center">
+                <p
+                  className="font-bebas text-2xl tracking-wider"
+                  style={{ color: ch.color }}
                 >
-                  Email Address
-                </label>
-                <input
-                  id="contact-email"
-                  data-ocid="contact.search_input"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 font-body text-sm outline-none transition-all duration-300"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: errors.email
-                      ? "1px solid rgba(225,0,0,0.6)"
-                      : "1px solid rgba(80,80,80,0.5)",
-                    borderRadius: 2,
-                    color: "#fff",
-                    fontSize: "0.95rem",
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.email)
-                      e.currentTarget.style.borderColor = "rgba(225,0,0,0.4)";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 12px rgba(225,0,0,0.1)";
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.email)
-                      e.currentTarget.style.borderColor = "rgba(80,80,80,0.5)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                />
-                {errors.email && (
-                  <p
-                    className="mt-1.5 text-xs flex items-center gap-1"
-                    style={{ color: "var(--red-bright)" }}
-                  >
-                    <AlertCircle size={12} /> {errors.email}
-                  </p>
-                )}
+                  {ch.label}
+                </p>
+                <p
+                  className="font-body text-xs tracking-widest uppercase mt-0.5"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                >
+                  {ch.sublabel}
+                </p>
               </div>
-
-              {/* Message */}
-              <div>
-                <label
-                  htmlFor="contact-message"
-                  className="block font-display text-sm font-semibold tracking-widest uppercase mb-2"
-                  style={{ color: "rgba(255,255,255,0.6)" }}
-                >
-                  Message
-                </label>
-                <textarea
-                  id="contact-message"
-                  data-ocid="contact.textarea"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tell me about your project, idea, or just say hello..."
-                  rows={5}
-                  className="w-full px-4 py-3 font-body text-sm outline-none resize-none transition-all duration-300"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: errors.message
-                      ? "1px solid rgba(225,0,0,0.6)"
-                      : "1px solid rgba(80,80,80,0.5)",
-                    borderRadius: 2,
-                    color: "#fff",
-                    fontSize: "0.95rem",
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.message)
-                      e.currentTarget.style.borderColor = "rgba(225,0,0,0.4)";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 12px rgba(225,0,0,0.1)";
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.message)
-                      e.currentTarget.style.borderColor = "rgba(80,80,80,0.5)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                />
-                {errors.message && (
-                  <p
-                    className="mt-1.5 text-xs flex items-center gap-1"
-                    style={{ color: "var(--red-bright)" }}
-                  >
-                    <AlertCircle size={12} /> {errors.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit */}
-              <button
-                type="submit"
-                data-ocid="contact.submit_button"
-                disabled={isPending}
-                className="btn-red w-full py-4 flex items-center justify-center gap-3 text-sm font-bold tracking-widest uppercase disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ borderRadius: 2 }}
-              >
-                {isPending ? (
-                  <>
-                    <Loader2
-                      size={16}
-                      className="animate-spin"
-                      data-ocid="contact.loading_state"
-                    />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} />
-                    Send Message
-                  </>
-                )}
-              </button>
-
-              {/* Error state */}
-              {isError && (
-                <div
-                  data-ocid="contact.error_state"
-                  className="flex items-center gap-2 px-4 py-3 text-sm"
-                  style={{
-                    background: "rgba(225,0,0,0.1)",
-                    border: "1px solid rgba(225,0,0,0.3)",
-                    borderRadius: 2,
-                    color: "var(--red-bright)",
-                  }}
-                >
-                  <AlertCircle size={16} />
-                  Something went wrong. Please try again.
-                </div>
-              )}
-            </form>
-          )}
+            </a>
+          ))}
         </div>
       </div>
     </section>
