@@ -294,17 +294,19 @@ function Navigation() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            {["about", "skills", "vision", "contact"].map((id) => (
-              <button
-                type="button"
-                key={id}
-                onClick={() => scrollTo(id)}
-                className="nav-link"
-                data-ocid={`nav.link.${id}`}
-              >
-                {id}
-              </button>
-            ))}
+            {["about", "skills", "vision", "achievements", "contact"].map(
+              (id) => (
+                <button
+                  type="button"
+                  key={id}
+                  onClick={() => scrollTo(id)}
+                  className="nav-link"
+                  data-ocid={`nav.link.${id}`}
+                >
+                  {id}
+                </button>
+              ),
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -330,16 +332,18 @@ function Navigation() {
         }}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
-          {["about", "skills", "vision", "contact"].map((id) => (
-            <button
-              type="button"
-              key={id}
-              onClick={() => scrollTo(id)}
-              className="nav-link text-left py-2"
-            >
-              {id}
-            </button>
-          ))}
+          {["about", "skills", "vision", "achievements", "contact"].map(
+            (id) => (
+              <button
+                type="button"
+                key={id}
+                onClick={() => scrollTo(id)}
+                className="nav-link text-left py-2"
+              >
+                {id}
+              </button>
+            ),
+          )}
         </div>
       </div>
     </nav>
@@ -520,6 +524,25 @@ function HeroSection() {
               }}
             />
           </div>
+        </div>
+
+        {/* Subtitle */}
+        <div
+          className="hero-tagline-animate flex justify-center mb-6"
+          style={{ animationDelay: "0.5s", opacity: 0 }}
+        >
+          <p
+            style={{
+              fontSize: "clamp(0.75rem, 2vw, 1rem)",
+              letterSpacing: "0.18em",
+              fontWeight: 600,
+              color: "#e10000",
+              textShadow:
+                "0 0 8px rgba(225,0,0,0.9), 0 0 20px rgba(225,0,0,0.6), 0 0 40px rgba(225,0,0,0.3)",
+            }}
+          >
+            Creator | Vision Builder | Digital Presence
+          </p>
         </div>
 
         {/* Tagline */}
@@ -1453,6 +1476,313 @@ function VisitorCounterSection() {
   );
 }
 
+// ── Achievements Section ──────────────────────────────────────────────────────
+interface AchievementStat {
+  target: number;
+  suffix: string;
+  label: string;
+  sublabel: string;
+}
+
+const achievementStats: AchievementStat[] = [
+  {
+    target: 10000,
+    suffix: "+",
+    label: "Website Visitors",
+    sublabel: "People who discovered this world",
+  },
+  {
+    target: 150,
+    suffix: "+",
+    label: "Creative Projects",
+    sublabel: "Ideas turned into reality",
+  },
+  {
+    target: 0,
+    suffix: "",
+    label: "Growing Digital Presence",
+    sublabel: "Expanding every single day",
+  },
+];
+
+function useCountUp(target: number, duration = 2000, enabled = false) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!enabled || target === 0) return;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(animate);
+      else setCount(target);
+    };
+
+    requestAnimationFrame(animate);
+  }, [target, duration, enabled]);
+
+  return count;
+}
+
+function AchievementCard({
+  stat,
+  index,
+  animate,
+}: {
+  stat: AchievementStat;
+  index: number;
+  animate: boolean;
+}) {
+  const count = useCountUp(stat.target, 2000 + index * 200, animate);
+  const isGrowth = stat.target === 0;
+
+  const displayValue = isGrowth ? "∞" : count.toLocaleString("en-US");
+
+  return (
+    <div
+      data-ocid={`achievements.item.${index + 1}`}
+      className="relative flex flex-col items-center justify-center text-center p-8 md:p-10 group"
+      style={{
+        background: "rgba(8,8,8,0.97)",
+        border: "1px solid rgba(225,0,0,0.18)",
+        boxShadow:
+          "0 0 30px rgba(225,0,0,0.06), inset 0 0 40px rgba(225,0,0,0.02)",
+        borderRadius: 4,
+        transition: "border-color 0.3s, box-shadow 0.3s, transform 0.3s",
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.borderColor = "rgba(225,0,0,0.65)";
+        el.style.boxShadow =
+          "0 0 50px rgba(225,0,0,0.35), 0 0 100px rgba(225,0,0,0.12), inset 0 0 60px rgba(225,0,0,0.05)";
+        el.style.transform = "translateY(-5px)";
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.borderColor = "rgba(225,0,0,0.18)";
+        el.style.boxShadow =
+          "0 0 30px rgba(225,0,0,0.06), inset 0 0 40px rgba(225,0,0,0.02)";
+        el.style.transform = "translateY(0)";
+      }}
+    >
+      {/* Corner accents */}
+      <div
+        className="absolute top-0 left-0 w-8 h-8 pointer-events-none"
+        style={{
+          borderTop: "2px solid rgba(225,0,0,0.5)",
+          borderLeft: "2px solid rgba(225,0,0,0.5)",
+        }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none"
+        style={{
+          borderBottom: "2px solid rgba(225,0,0,0.5)",
+          borderRight: "2px solid rgba(225,0,0,0.5)",
+        }}
+      />
+
+      {/* Ambient glow blob */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 50%, rgba(225,0,0,0.08) 0%, transparent 70%)",
+          filter: "blur(20px)",
+          animation: "profile-glow-pulse 3s ease-in-out infinite",
+          animationDelay: `${index * 0.7}s`,
+        }}
+      />
+
+      {/* Stat number */}
+      <div className="relative">
+        <div
+          className="font-bebas leading-none"
+          style={{
+            fontSize: isGrowth
+              ? "clamp(3rem, 9vw, 7rem)"
+              : "clamp(3.5rem, 10vw, 8rem)",
+            color: "var(--red-bright)",
+            textShadow:
+              "0 0 30px rgba(225,0,0,0.9), 0 0 80px rgba(225,0,0,0.5), 0 0 160px rgba(225,0,0,0.18)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {displayValue}
+          {!isGrowth && (
+            <span
+              style={{
+                fontSize: "0.55em",
+                verticalAlign: "super",
+                color: "var(--red-bright)",
+              }}
+            >
+              {stat.suffix}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Label */}
+      <p
+        className="font-bebas tracking-widest mt-3"
+        style={{
+          fontSize: "clamp(0.95rem, 2vw, 1.4rem)",
+          color: "rgba(255,255,255,0.9)",
+          letterSpacing: "0.12em",
+        }}
+      >
+        {stat.label}
+      </p>
+
+      {/* Sublabel */}
+      <p
+        className="font-body text-xs mt-2"
+        style={{
+          color: "rgba(255,255,255,0.35)",
+          letterSpacing: "0.08em",
+          maxWidth: 200,
+        }}
+      >
+        {stat.sublabel}
+      </p>
+
+      {/* Bottom accent line */}
+      <div
+        className="mt-5 h-px w-12 group-hover:w-24 transition-all duration-500"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.7), transparent)",
+          boxShadow: "0 0 6px rgba(225,0,0,0.3)",
+        }}
+      />
+    </div>
+  );
+}
+
+function AchievementsSection() {
+  const headerRef = useScrollReveal(0.15);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [animateStats, setAnimateStats] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnimateStats(true);
+          observer.unobserve(section);
+        }
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section
+      id="achievements"
+      ref={sectionRef}
+      data-ocid="achievements.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.45), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.45), transparent)",
+        }}
+      />
+
+      {/* Atmospheric red radial behind stats */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 500,
+          background:
+            "radial-gradient(ellipse, rgba(225,0,0,0.12) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }}
+      />
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-12">
+        {/* Header */}
+        <div
+          ref={headerRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal text-center mb-16"
+        >
+          <div className="inline-flex items-center gap-3 mb-6">
+            <span
+              className="h-px w-12"
+              style={{
+                background: "var(--red-bright)",
+                boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+              }}
+            />
+            <span
+              className="font-display text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "var(--red-bright)" }}
+            >
+              Milestones
+            </span>
+            <span
+              className="h-px w-12"
+              style={{
+                background: "var(--red-bright)",
+                boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+              }}
+            />
+          </div>
+          <h2 className="font-bebas text-5xl md:text-6xl lg:text-7xl tracking-wider text-white red-underline-center">
+            ACHIEVEMENTS
+          </h2>
+          <p
+            className="mt-6 font-body max-w-md mx-auto"
+            style={{ color: "rgba(255,255,255,0.45)", fontSize: "1rem" }}
+          >
+            Numbers that mark the journey — every one of them earned.
+          </p>
+        </div>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {achievementStats.map((stat, i) => (
+            <AchievementCard
+              key={stat.label}
+              stat={stat}
+              index={i}
+              animate={animateStats}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── WhatsApp SVG Icon ─────────────────────────────────────────────────────────
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -1481,34 +1811,22 @@ function ContactSection() {
       id: "whatsapp",
       label: "WhatsApp",
       sublabel: "Message directly",
-      icon: <WhatsAppIcon size={28} />,
-      href: "https://wa.me/message/DIRECT",
-      color: "#25D366",
-      glowColor: "rgba(37,211,102,0.35)",
-      borderColor: "rgba(37,211,102,0.3)",
-      hoverBorder: "rgba(37,211,102,0.7)",
+      icon: <WhatsAppIcon size={32} />,
+      href: "https://wa.me/917902152365",
     },
     {
       id: "instagram",
       label: "Instagram",
       sublabel: "Follow & DM",
-      icon: <Instagram size={28} />,
-      href: "https://instagram.com/rupeshthakur",
-      color: "#E1306C",
-      glowColor: "rgba(225,48,108,0.35)",
-      borderColor: "rgba(225,48,108,0.3)",
-      hoverBorder: "rgba(225,48,108,0.7)",
+      icon: <Instagram size={32} />,
+      href: "https://instagram.com/rup.esh_thakur",
     },
     {
       id: "email",
       label: "Email",
       sublabel: "Send a message",
-      icon: <Mail size={28} />,
-      href: "mailto:rupeshthakur@email.com",
-      color: "var(--red-bright)",
-      glowColor: "rgba(225,0,0,0.35)",
-      borderColor: "rgba(225,0,0,0.3)",
-      hoverBorder: "rgba(225,0,0,0.7)",
+      icon: <Mail size={32} />,
+      href: "mailto:rupeshthakur7179@gmail.com",
     },
   ];
 
@@ -1535,14 +1853,12 @@ function ContactSection() {
         }}
       />
 
-      {/* Ambient glow */}
+      {/* Ambient glow — centered */}
       <div
-        className="absolute bottom-0 right-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          width: 500,
-          height: 500,
           background:
-            "radial-gradient(circle, rgba(225,0,0,0.05) 0%, transparent 70%)",
+            "radial-gradient(ellipse 80% 60% at 50% 100%, rgba(225,0,0,0.07) 0%, transparent 70%)",
         }}
       />
 
@@ -1566,7 +1882,7 @@ function ContactSection() {
         {/* Contact buttons */}
         <div
           ref={buttonsRef as React.RefObject<HTMLDivElement>}
-          className="scroll-reveal flex flex-col sm:flex-row gap-5 justify-center"
+          className="scroll-reveal flex flex-col sm:flex-row gap-6 justify-center items-stretch"
         >
           {contactChannels.map((ch) => (
             <a
@@ -1575,34 +1891,55 @@ function ContactSection() {
               target="_blank"
               rel="noopener noreferrer"
               data-ocid={`contact.${ch.id}.button`}
-              className="group flex-1 flex flex-col items-center gap-3 py-10 px-6 transition-all duration-300 cursor-pointer"
+              className="group flex-1 flex flex-col items-center justify-center gap-4 py-12 px-8 transition-all duration-300 cursor-pointer"
               style={{
-                background: "rgba(10,10,10,0.95)",
-                border: `1px solid ${ch.borderColor}`,
-                borderRadius: 4,
-                boxShadow: `0 0 20px ${ch.glowColor.replace("0.35", "0.06")}`,
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(225,0,0,0.18)",
+                borderRadius: 2,
+                boxShadow:
+                  "0 0 24px rgba(225,0,0,0.04), inset 0 0 40px rgba(225,0,0,0.02)",
                 textDecoration: "none",
+                minHeight: 220,
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.border = `1px solid ${ch.hoverBorder}`;
-                el.style.boxShadow = `0 0 32px ${ch.glowColor}, 0 0 80px ${ch.glowColor.replace("0.35", "0.12")}`;
-                el.style.transform = "translateY(-4px)";
+                el.style.border = "1px solid rgba(225,0,0,0.75)";
+                el.style.boxShadow =
+                  "0 0 40px rgba(225,0,0,0.45), 0 0 90px rgba(225,0,0,0.18), inset 0 0 60px rgba(225,0,0,0.06)";
+                el.style.transform = "translateY(-6px)";
+                const iconWrap = el.querySelector(
+                  ".contact-icon-wrap",
+                ) as HTMLElement;
+                if (iconWrap) {
+                  iconWrap.style.background = "rgba(225,0,0,0.18)";
+                  iconWrap.style.borderColor = "rgba(225,0,0,0.7)";
+                  iconWrap.style.boxShadow = "0 0 24px rgba(225,0,0,0.5)";
+                }
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.border = `1px solid ${ch.borderColor}`;
-                el.style.boxShadow = `0 0 20px ${ch.glowColor.replace("0.35", "0.06")}`;
+                el.style.border = "1px solid rgba(225,0,0,0.18)";
+                el.style.boxShadow =
+                  "0 0 24px rgba(225,0,0,0.04), inset 0 0 40px rgba(225,0,0,0.02)";
                 el.style.transform = "translateY(0)";
+                const iconWrap = el.querySelector(
+                  ".contact-icon-wrap",
+                ) as HTMLElement;
+                if (iconWrap) {
+                  iconWrap.style.background = "rgba(225,0,0,0.08)";
+                  iconWrap.style.borderColor = "rgba(225,0,0,0.2)";
+                  iconWrap.style.boxShadow = "none";
+                }
               }}
             >
-              {/* Icon */}
+              {/* Icon circle */}
               <div
-                className="flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300"
+                className="contact-icon-wrap flex items-center justify-center w-20 h-20 rounded-full transition-all duration-300"
                 style={{
-                  background: `${ch.glowColor.replace("0.35", "0.12")}`,
-                  border: `1px solid ${ch.borderColor}`,
-                  color: ch.color,
+                  background: "rgba(225,0,0,0.08)",
+                  border: "1px solid rgba(225,0,0,0.2)",
+                  color: "var(--red-bright)",
+                  boxShadow: "none",
                 }}
               >
                 {ch.icon}
@@ -1611,18 +1948,36 @@ function ContactSection() {
               {/* Label */}
               <div className="text-center">
                 <p
-                  className="font-bebas text-2xl tracking-wider"
-                  style={{ color: ch.color }}
+                  className="font-bebas text-3xl tracking-widest"
+                  style={{
+                    color: "#fff",
+                    textShadow: "0 0 20px rgba(225,0,0,0.0)",
+                    transition: "text-shadow 0.3s",
+                  }}
                 >
                   {ch.label}
                 </p>
                 <p
-                  className="font-body text-xs tracking-widest uppercase mt-0.5"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  className="font-body text-xs tracking-widest uppercase mt-1"
+                  style={{
+                    color: "rgba(255,255,255,0.35)",
+                    letterSpacing: "0.15em",
+                  }}
                 >
                   {ch.sublabel}
                 </p>
               </div>
+
+              {/* Bottom red accent line */}
+              <div
+                className="w-10 transition-all duration-300 group-hover:w-20"
+                style={{
+                  height: 2,
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(225,0,0,0.7), transparent)",
+                  borderRadius: 9999,
+                }}
+              />
             </a>
           ))}
         </div>
@@ -1759,6 +2114,7 @@ export default function App() {
         <AboutSection />
         <SkillsSection />
         <VisionSection />
+        <AchievementsSection />
         <VisitorCounterSection />
         <ContactSection />
       </main>
