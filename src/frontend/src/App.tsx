@@ -195,6 +195,108 @@ function useStaggerReveal(threshold = 0.1) {
   return ref;
 }
 
+// ── Jai Shree Ram Intro Overlay ───────────────────────────────────────────────
+function JaiShreeRamIntro() {
+  const [phase, setPhase] = useState<"in" | "hold" | "out" | "done">("in");
+
+  useEffect(() => {
+    // Fade in over 800ms, hold for 2s, fade out over 1.2s
+    const holdTimer = setTimeout(() => setPhase("hold"), 800);
+    const outTimer = setTimeout(() => setPhase("out"), 2800);
+    const doneTimer = setTimeout(() => setPhase("done"), 4000);
+    return () => {
+      clearTimeout(holdTimer);
+      clearTimeout(outTimer);
+      clearTimeout(doneTimer);
+    };
+  }, []);
+
+  if (phase === "done") return null;
+
+  const opacity = phase === "in" ? 0 : phase === "hold" ? 1 : 0;
+  const scale = phase === "in" ? 0.85 : phase === "hold" ? 1 : 1.05;
+  const transition =
+    phase === "in"
+      ? "opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.22,1,0.36,1)"
+      : phase === "out"
+        ? "opacity 1.2s ease-in, transform 1.2s ease-in"
+        : "none";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        pointerEvents: "none",
+        background: "rgba(0,0,0,0.55)",
+        opacity,
+        transition:
+          phase === "in"
+            ? "opacity 0.8s ease-out"
+            : phase === "out"
+              ? "opacity 1.2s ease-in"
+              : "none",
+      }}
+    >
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transition,
+          textAlign: "center",
+          userSelect: "none",
+        }}
+      >
+        {/* Ambient saffron bloom behind text */}
+        <div
+          style={{
+            position: "absolute",
+            inset: "-60px",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(ellipse at center, rgba(255,153,0,0.35) 0%, rgba(255,100,0,0.15) 50%, transparent 75%)",
+            filter: "blur(24px)",
+            zIndex: -1,
+          }}
+        />
+        <div
+          style={{
+            fontFamily: "'Bebas Neue', 'Georgia', serif",
+            fontSize: "clamp(2.8rem, 8vw, 5.5rem)",
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            color: "#FF9500",
+            textShadow: [
+              "0 0 12px rgba(255,153,0,0.95)",
+              "0 0 28px rgba(255,130,0,0.75)",
+              "0 0 55px rgba(255,100,0,0.55)",
+              "0 0 90px rgba(255,80,0,0.35)",
+            ].join(", "),
+            lineHeight: 1.1,
+          }}
+        >
+          🚩 Jai Shree Ram 🚩
+        </div>
+        {/* Thin saffron underline */}
+        <div
+          style={{
+            margin: "10px auto 0",
+            width: "60%",
+            height: "2px",
+            borderRadius: "1px",
+            background:
+              "linear-gradient(90deg, transparent, #FF9500 30%, #FF6200 70%, transparent)",
+            boxShadow: "0 0 10px rgba(255,153,0,0.7)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Visitor Map: pre-computed land dot grid (module level for perf) ──────────
 interface LandDot {
   cx: number;
@@ -578,6 +680,57 @@ function HeroSection() {
           </span>
         </h1>
 
+        {/* Jai Shree Ram + animated flag */}
+        <div
+          className="hero-tagline-animate flex flex-col items-center"
+          style={{
+            animationDelay: "0.2s",
+            opacity: 0,
+            marginBottom: "1.25rem",
+          }}
+        >
+          <div className="flex items-center justify-center gap-3">
+            {/* Animated waving saffron flag */}
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                animation: "flag-wave 1.8s ease-in-out infinite",
+                transformOrigin: "left center",
+                fontSize: "clamp(1.2rem, 3vw, 1.8rem)",
+                filter: "drop-shadow(0 0 6px rgba(255,107,0,0.8))",
+              }}
+            >
+              🚩
+            </span>
+            <span
+              style={{
+                fontSize: "clamp(1.1rem, 2.8vw, 1.6rem)",
+                fontWeight: 800,
+                color: "#FF8C00",
+                letterSpacing: "0.08em",
+                textShadow:
+                  "0 0 10px rgba(255,140,0,0.95), 0 0 25px rgba(255,107,0,0.7), 0 0 50px rgba(255,150,0,0.4), 0 0 80px rgba(255,100,0,0.2)",
+              }}
+            >
+              Jai Shree Ram
+            </span>
+          </div>
+
+          {/* Thin saffron divider line */}
+          <div
+            style={{
+              marginTop: "0.75rem",
+              width: "clamp(120px, 20vw, 280px)",
+              height: "1px",
+              background:
+                "linear-gradient(90deg, transparent, #FF8C00, rgba(255,180,50,0.9), #FF8C00, transparent)",
+              boxShadow:
+                "0 0 6px rgba(255,140,0,0.7), 0 0 16px rgba(255,107,0,0.4)",
+            }}
+          />
+        </div>
+
         {/* Profile Photo */}
         <div
           className="hero-tagline-animate flex justify-center"
@@ -791,6 +944,7 @@ function AboutSection() {
   const revealLeftRef = useScrollReveal();
   const revealRightRef = useScrollReveal();
   const storyRef = useScrollReveal(0.15);
+  const seoRef = useScrollReveal(0.1);
 
   return (
     <section
@@ -826,7 +980,7 @@ function AboutSection() {
               className="font-display text-xs font-semibold tracking-widest uppercase"
               style={{ color: "var(--red-bright)" }}
             >
-              Official Personal Website
+              Official Personal Website of Rupesh Thakur
             </span>
             <span
               className="inline-block w-6 h-px"
@@ -834,7 +988,7 @@ function AboutSection() {
             />
           </div>
           <h2 className="font-bebas text-5xl md:text-6xl lg:text-7xl tracking-wider text-white red-underline">
-            ABOUT ME
+            ABOUT RUPESH THAKUR
           </h2>
         </div>
 
@@ -857,8 +1011,14 @@ function AboutSection() {
               </span>{" "}
               is a digital creator, brand builder, and visionary focused on
               turning bold ideas into real-world impact. With a relentless drive
-              to create, he has built his presence from the ground up — one
-              step, one project, one connection at a time.
+              to create,{" "}
+              <span
+                style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
+              >
+                Rupesh Thakur
+              </span>{" "}
+              has built his presence from the ground up — one step, one project,
+              one connection at a time.
             </p>
             <p
               className="font-body leading-relaxed mb-6"
@@ -868,12 +1028,16 @@ function AboutSection() {
                 lineHeight: 1.9,
               }}
             >
-              This is the{" "}
+              You are on the{" "}
               <span style={{ color: "var(--red-bright)", fontWeight: 700 }}>
                 official personal website of Rupesh Thakur
               </span>{" "}
               — the one place where you can explore his work, vision, skills,
-              and get in touch directly.
+              and get in touch directly. This site is built and maintained by{" "}
+              <span style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
+                Rupesh Thakur
+              </span>{" "}
+              himself.
             </p>
             <p
               className="font-body leading-relaxed mb-8"
@@ -888,7 +1052,13 @@ function AboutSection() {
               <span style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>
                 begin
               </span>
-              . And he began.
+              . And{" "}
+              <span
+                style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}
+              >
+                Rupesh Thakur
+              </span>{" "}
+              began.
             </p>
 
             {/* Stats row */}
@@ -1005,7 +1175,7 @@ function AboutSection() {
               className="font-display text-xs font-semibold tracking-widest uppercase"
               style={{ color: "rgba(225,0,0,0.8)" }}
             >
-              The Story
+              The Story of Rupesh Thakur
             </span>
             <span
               className="h-px flex-1"
@@ -1043,7 +1213,7 @@ function AboutSection() {
                 textShadow: "0 0 20px rgba(225,0,0,0.2)",
               }}
             >
-              BUILDING SOMETHING BIG FROM{" "}
+              RUPESH THAKUR — BUILDING SOMETHING BIG FROM{" "}
               <span
                 style={{
                   color: "var(--red-bright)",
@@ -1064,15 +1234,14 @@ function AboutSection() {
                   lineHeight: 1.95,
                 }}
               >
-                There was no blueprint. No wealthy background. No shortcut. Just
-                a person with a fire inside and an unshakeable belief that
-                things could be different. That{" "}
+                There was no blueprint. No wealthy background. No shortcut. Just{" "}
                 <span
                   style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600 }}
                 >
-                  he
+                  Rupesh Thakur
                 </span>{" "}
-                could be different.
+                — a person with a fire inside and an unshakeable belief that
+                things could be different. That he could be different.
               </p>
               <p
                 className="font-body leading-relaxed"
@@ -1082,11 +1251,16 @@ function AboutSection() {
                   lineHeight: 1.95,
                 }}
               >
-                Rupesh started with nothing but ambition — navigating
-                uncertainty, learning from every failure, and refusing to let
-                doubt become a destination. While others waited for the perfect
-                moment, he worked in the silence, building brick by brick when
-                no one was watching.
+                <span
+                  style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}
+                >
+                  Rupesh Thakur
+                </span>{" "}
+                started with nothing but ambition — navigating uncertainty,
+                learning from every failure, and refusing to let doubt become a
+                destination. While others waited for the perfect moment, he
+                worked in the silence, building brick by brick when no one was
+                watching.
               </p>
               <p
                 className="font-body leading-relaxed"
@@ -1106,7 +1280,7 @@ function AboutSection() {
                     textShadow: "0 0 12px rgba(225,0,0,0.4)",
                   }}
                 >
-                  something big is being built here.
+                  Rupesh Thakur is building something legendary.
                 </span>
               </p>
               <p
@@ -1116,9 +1290,61 @@ function AboutSection() {
                   letterSpacing: "0.08em",
                 }}
               >
-                The foundation is laid. The rise has begun.
+                The foundation is laid. The rise of Rupesh Thakur has begun.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* SEO identity block — visible, informative, keyword-rich */}
+        <div
+          ref={seoRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal mt-16 md:mt-20"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Who is Rupesh Thakur?",
+                body: "Rupesh Thakur is a digital creator and personal brand builder with a growing online presence. He creates content, builds brands, and inspires others to pursue their vision without limits.",
+              },
+              {
+                title: "Official Website",
+                body: "This is the one and only official website of Rupesh Thakur. All information, projects, and contact details published here are authentic and directly managed by Rupesh Thakur.",
+              },
+              {
+                title: "What Rupesh Thakur Stands For",
+                body: "Rupesh Thakur stands for ambition, authenticity, and relentless growth. His motto: start with nothing, build everything. Not here to fit in — here to stand out.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="p-6"
+                style={{
+                  background: "rgba(10,0,0,0.6)",
+                  border: "1px solid rgba(225,0,0,0.12)",
+                  borderRadius: 2,
+                }}
+              >
+                <h4
+                  className="font-bebas text-xl tracking-wider mb-3"
+                  style={{
+                    color: "var(--red-bright)",
+                    textShadow: "0 0 12px rgba(225,0,0,0.3)",
+                  }}
+                >
+                  {item.title}
+                </h4>
+                <p
+                  className="font-body text-sm leading-relaxed"
+                  style={{
+                    color: "rgba(255,255,255,0.55)",
+                    lineHeight: 1.85,
+                  }}
+                >
+                  {item.body}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -2555,11 +2781,77 @@ function Footer() {
   );
 }
 
+// ── Temple Bell Sound ─────────────────────────────────────────────────────────
+function useTempleBell() {
+  useEffect(() => {
+    // Play once after a short delay, respecting browser autoplay policy by
+    // synthesising the bell with Web Audio (no external file needed).
+    const timer = setTimeout(() => {
+      try {
+        const ctx = new (
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext
+        )();
+
+        // Resume in case the context starts suspended
+        void ctx.resume().then(() => {
+          const masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime(0.18, ctx.currentTime); // low & peaceful
+          masterGain.connect(ctx.destination);
+
+          // Bell is built from two partials: fundamental + bright harmonic
+          const partials: { freq: number; gain: number; decay: number }[] = [
+            { freq: 528, gain: 1.0, decay: 3.8 }, // fundamental (spiritual 528 Hz)
+            { freq: 1056, gain: 0.35, decay: 2.2 }, // 2nd harmonic
+            { freq: 1848, gain: 0.12, decay: 1.4 }, // upper shimmer
+          ];
+
+          for (const p of partials) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(p.freq, ctx.currentTime);
+
+            gain.gain.setValueAtTime(p.gain, ctx.currentTime);
+            // Exponential decay — bell tail fades to near-zero
+            gain.gain.exponentialRampToValueAtTime(
+              0.001,
+              ctx.currentTime + p.decay,
+            );
+
+            osc.connect(gain);
+            gain.connect(masterGain);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + p.decay + 0.1);
+          }
+
+          // Close context after the longest tail finishes
+          setTimeout(
+            () => {
+              void ctx.close();
+            },
+            (3.8 + 0.5) * 1000,
+          );
+        });
+      } catch {
+        // Silently ignore if Web Audio is unavailable
+      }
+    }, 800); // slight delay so the page has settled
+
+    return () => clearTimeout(timer);
+  }, []);
+}
+
 // ── Main App ──────────────────────────────────────────────────────────────────
 export default function App() {
+  useTempleBell();
   return (
     <div className="min-h-screen" style={{ background: "#000", color: "#fff" }}>
       <SmokeCanvas />
+      <JaiShreeRamIntro />
       <Toaster
         position="top-right"
         toastOptions={{
