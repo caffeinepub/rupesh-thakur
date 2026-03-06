@@ -490,6 +490,7 @@ function Navigation() {
               "map",
               "tools",
               "ig-reel",
+              "img-converter",
               "contact",
             ].map((id) => (
               <button
@@ -507,7 +508,11 @@ function Navigation() {
                 className="nav-link"
                 data-ocid={`nav.link.${id}`}
               >
-                {id === "ig-reel" ? "ig reel" : id}
+                {id === "ig-reel"
+                  ? "ig reel"
+                  : id === "img-converter"
+                    ? "img convert"
+                    : id}
               </button>
             ))}
           </div>
@@ -544,6 +549,7 @@ function Navigation() {
             "map",
             "tools",
             "ig-reel",
+            "img-converter",
             "contact",
           ].map((id) => (
             <button
@@ -560,7 +566,11 @@ function Navigation() {
               }
               className="nav-link text-left py-2"
             >
-              {id === "ig-reel" ? "ig reel" : id}
+              {id === "ig-reel"
+                ? "ig reel"
+                : id === "img-converter"
+                  ? "img convert"
+                  : id}
             </button>
           ))}
         </div>
@@ -3890,6 +3900,665 @@ function InstagramReelDownloaderSection() {
   );
 }
 
+// ── Image Converter Section ───────────────────────────────────────────────────
+type ImageFormat = "jpg" | "png" | "webp";
+
+function ImageConverterSection() {
+  const revealRef = useScrollReveal(0.15);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [sourcePreview, setSourcePreview] = useState<string | null>(null);
+  const [targetFormat, setTargetFormat] = useState<ImageFormat>("jpg");
+  const [convertStatus, setConvertStatus] = useState<
+    "idle" | "converting" | "done" | "error"
+  >("idle");
+  const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
+
+  const loadFile = (file: File) => {
+    if (!ACCEPTED.includes(file.type)) {
+      setError("Please upload a JPG, PNG, or WEBP image.");
+      return;
+    }
+    if (convertedUrl) {
+      URL.revokeObjectURL(convertedUrl);
+      setConvertedUrl(null);
+    }
+    setError(null);
+    setConvertStatus("idle");
+    setSourceFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setSourcePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) loadFile(file);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleConvert = () => {
+    if (!sourceFile || !sourcePreview) return;
+    setConvertStatus("converting");
+    setError(null);
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setError("Canvas not supported in this browser.");
+        setConvertStatus("error");
+        return;
+      }
+
+      // For JPG, fill background white (canvas is transparent by default)
+      if (targetFormat === "jpg") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      ctx.drawImage(img, 0, 0);
+
+      const mimeMap: Record<ImageFormat, string> = {
+        jpg: "image/jpeg",
+        png: "image/png",
+        webp: "image/webp",
+      };
+
+      const mime = mimeMap[targetFormat];
+      const quality = targetFormat === "jpg" ? 0.92 : undefined;
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            setError("Conversion failed. Try a different image.");
+            setConvertStatus("error");
+            return;
+          }
+          if (convertedUrl) URL.revokeObjectURL(convertedUrl);
+          const url = URL.createObjectURL(blob);
+          setConvertedUrl(url);
+          setConvertStatus("done");
+        },
+        mime,
+        quality,
+      );
+    };
+    img.onerror = () => {
+      setError("Could not load image for conversion.");
+      setConvertStatus("error");
+    };
+    img.src = sourcePreview;
+  };
+
+  const handleDownload = () => {
+    if (!convertedUrl) return;
+    const a = document.createElement("a");
+    a.href = convertedUrl;
+    a.download = `converted.${targetFormat}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleReset = () => {
+    if (convertedUrl) URL.revokeObjectURL(convertedUrl);
+    setConvertedUrl(null);
+    setSourceFile(null);
+    setSourcePreview(null);
+    setConvertStatus("idle");
+    setError(null);
+    setIsDragOver(false);
+  };
+
+  const formats: { key: ImageFormat; label: string; ocid: string }[] = [
+    { key: "jpg", label: "JPG", ocid: "img-converter.jpg_toggle" },
+    { key: "png", label: "PNG", ocid: "img-converter.png_toggle" },
+    { key: "webp", label: "WEBP", ocid: "img-converter.webp_toggle" },
+  ];
+
+  return (
+    <section
+      id="img-converter"
+      data-ocid="img-converter.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+
+      {/* Atmospheric red radial */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 500,
+          background:
+            "radial-gradient(ellipse, rgba(225,0,0,0.1) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-12">
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal"
+        >
+          {/* Section label */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-3">
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+              <span
+                className="font-display text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "var(--red-bright)" }}
+              >
+                Free Tools
+              </span>
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Section heading */}
+          <h2
+            className="font-bebas text-center tracking-wider mb-4 red-underline-center"
+            style={{
+              fontSize: "clamp(2rem, 6vw, 4.5rem)",
+              color: "#fff",
+              textShadow:
+                "0 0 30px rgba(225,0,0,0.2), 0 0 80px rgba(225,0,0,0.08)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            IMAGE CONVERTER
+          </h2>
+          <p
+            className="text-center font-body mt-4 mb-12 mx-auto"
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "1rem",
+              maxWidth: "460px",
+            }}
+          >
+            Upload any JPG, PNG, or WEBP image and convert it to your desired
+            format — instantly in your browser.
+          </p>
+
+          {/* Dropzone */}
+          <div
+            data-ocid="img-converter.dropzone"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => !sourceFile && fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && !sourceFile) {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            className="relative mb-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-200"
+            style={{
+              minHeight: 180,
+              border: isDragOver
+                ? "2px solid rgba(225,0,0,0.9)"
+                : "2px dashed rgba(225,0,0,0.35)",
+              borderRadius: 4,
+              background: isDragOver
+                ? "rgba(225,0,0,0.07)"
+                : "rgba(8,8,8,0.97)",
+              boxShadow: isDragOver
+                ? "0 0 24px rgba(225,0,0,0.2), inset 0 0 40px rgba(225,0,0,0.05)"
+                : "0 0 12px rgba(225,0,0,0.04), inset 0 0 30px rgba(0,0,0,0.5)",
+              padding: "2rem",
+              cursor: sourceFile ? "default" : "pointer",
+            }}
+          >
+            {!sourceFile ? (
+              <>
+                {/* Upload icon */}
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    background: "rgba(225,0,0,0.08)",
+                    border: "1px solid rgba(225,0,0,0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--red-bright)",
+                  }}
+                >
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p
+                    className="font-bebas tracking-widest"
+                    style={{
+                      fontSize: "1.25rem",
+                      color: "#fff",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    DROP IMAGE HERE
+                  </p>
+                  <p
+                    className="font-body text-sm mt-1"
+                    style={{ color: "rgba(255,255,255,0.38)" }}
+                  >
+                    or click to browse
+                  </p>
+                  <p
+                    className="font-body text-xs mt-2"
+                    style={{
+                      color: "rgba(225,0,0,0.6)",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    JPG · PNG · WEBP
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-ocid="img-converter.upload_button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  className="btn-outline-red font-bebas tracking-widest uppercase"
+                  style={{
+                    padding: "10px 24px",
+                    fontSize: "0.9rem",
+                    borderRadius: 2,
+                  }}
+                >
+                  BROWSE FILE
+                </button>
+              </>
+            ) : (
+              // Image loaded preview inside dropzone
+              <div className="w-full flex flex-col items-center gap-4">
+                <img
+                  src={sourcePreview ?? ""}
+                  alt="Source preview"
+                  style={{
+                    maxHeight: 220,
+                    maxWidth: "100%",
+                    objectFit: "contain",
+                    borderRadius: 2,
+                    boxShadow: "0 4px 32px rgba(0,0,0,0.7)",
+                  }}
+                />
+                <p
+                  className="font-body text-sm text-center"
+                  style={{ color: "rgba(255,255,255,0.5)" }}
+                >
+                  <span style={{ color: "var(--red-bright)" }}>
+                    {sourceFile.name}
+                  </span>{" "}
+                  · {(sourceFile.size / 1024).toFixed(0)} KB
+                </p>
+                <button
+                  type="button"
+                  data-ocid="img-converter.upload_button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  className="btn-outline-red font-bebas tracking-widest uppercase"
+                  style={{
+                    padding: "8px 20px",
+                    fontSize: "0.85rem",
+                    borderRadius: 2,
+                  }}
+                >
+                  CHANGE IMAGE
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: "none" }}
+            onChange={handleFileInput}
+            aria-label="Upload image file"
+          />
+
+          {/* Format selector */}
+          <div className="mb-8">
+            <p
+              className="font-display text-xs font-semibold tracking-widest uppercase mb-3 text-center"
+              style={{ color: "rgba(255,255,255,0.4)" }}
+            >
+              Convert To
+            </p>
+            <div className="flex gap-3 justify-center">
+              {formats.map((fmt) => (
+                <button
+                  key={fmt.key}
+                  type="button"
+                  data-ocid={fmt.ocid}
+                  onClick={() => {
+                    setTargetFormat(fmt.key);
+                    if (convertStatus === "done") {
+                      setConvertStatus("idle");
+                      if (convertedUrl) {
+                        URL.revokeObjectURL(convertedUrl);
+                        setConvertedUrl(null);
+                      }
+                    }
+                  }}
+                  className={
+                    targetFormat === fmt.key
+                      ? "btn-red font-bebas tracking-widest uppercase"
+                      : "btn-outline-red font-bebas tracking-widest uppercase"
+                  }
+                  style={{
+                    padding: "10px 28px",
+                    fontSize: "1rem",
+                    borderRadius: 2,
+                    minWidth: 80,
+                  }}
+                >
+                  {fmt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+            <button
+              type="button"
+              data-ocid="img-converter.submit_button"
+              onClick={handleConvert}
+              disabled={!sourceFile || convertStatus === "converting"}
+              className="btn-red font-bebas tracking-widest uppercase"
+              style={{
+                padding: "14px 32px",
+                fontSize: "1rem",
+                borderRadius: 2,
+                opacity:
+                  !sourceFile || convertStatus === "converting" ? 0.5 : 1,
+                cursor:
+                  !sourceFile || convertStatus === "converting"
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+            >
+              {convertStatus === "converting" ? "CONVERTING…" : "CONVERT IMAGE"}
+            </button>
+            {sourceFile && (
+              <button
+                type="button"
+                data-ocid="img-converter.cancel_button"
+                onClick={handleReset}
+                className="btn-outline-red font-bebas tracking-widest uppercase"
+                style={{
+                  padding: "14px 28px",
+                  fontSize: "1rem",
+                  borderRadius: 2,
+                }}
+              >
+                RESET
+              </button>
+            )}
+          </div>
+
+          {/* Error state */}
+          {error && (
+            <div
+              data-ocid="img-converter.error_state"
+              className="flex items-center gap-3 mb-8 p-4"
+              style={{
+                background: "rgba(225,0,0,0.07)",
+                border: "1px solid rgba(225,0,0,0.3)",
+                borderRadius: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "var(--red-bright)",
+                  flexShrink: 0,
+                  boxShadow: "0 0 6px rgba(225,0,0,0.8)",
+                }}
+              />
+              <p
+                className="font-body text-sm"
+                style={{ color: "rgba(255,100,100,0.95)" }}
+              >
+                {error}
+              </p>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {convertStatus === "converting" && (
+            <div
+              data-ocid="img-converter.loading_state"
+              className="mb-8 flex flex-col items-center gap-4"
+            >
+              <div
+                className="w-full"
+                style={{
+                  height: 8,
+                  maxWidth: 400,
+                  background: "rgba(225,0,0,0.1)",
+                  borderRadius: 4,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(225,0,0,0.9), transparent)",
+                    animation: "scan-line 1.2s linear infinite",
+                  }}
+                />
+              </div>
+              <p
+                className="font-display text-xs tracking-widest uppercase"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+              >
+                Converting…
+              </p>
+            </div>
+          )}
+
+          {/* Success / result card */}
+          {convertStatus === "done" && convertedUrl && (
+            <div data-ocid="img-converter.success_state">
+              <div
+                data-ocid="img-converter.card"
+                className="relative"
+                style={{
+                  background: "rgba(8,8,8,0.97)",
+                  border: "1px solid rgba(225,0,0,0.25)",
+                  borderRadius: 4,
+                  boxShadow:
+                    "0 0 30px rgba(225,0,0,0.12), 0 0 80px rgba(225,0,0,0.05), inset 0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(225,0,0,0.08)",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Corner accents */}
+                <div
+                  className="absolute top-0 left-0 w-10 h-10 pointer-events-none z-10"
+                  style={{
+                    borderTop: "3px solid var(--red-bright)",
+                    borderLeft: "3px solid var(--red-bright)",
+                    boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                  }}
+                />
+                <div
+                  className="absolute top-0 right-0 w-10 h-10 pointer-events-none z-10"
+                  style={{
+                    borderTop: "3px solid var(--red-bright)",
+                    borderRight: "3px solid var(--red-bright)",
+                    boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                  }}
+                />
+                <div
+                  className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none z-10"
+                  style={{
+                    borderBottom: "3px solid var(--red-bright)",
+                    borderLeft: "3px solid var(--red-bright)",
+                    boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                  }}
+                />
+                <div
+                  className="absolute bottom-0 right-0 w-10 h-10 pointer-events-none z-10"
+                  style={{
+                    borderBottom: "3px solid var(--red-bright)",
+                    borderRight: "3px solid var(--red-bright)",
+                    boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                  }}
+                />
+
+                {/* Converted image preview */}
+                <div className="p-5 pb-4">
+                  <img
+                    src={convertedUrl}
+                    alt={`Converted to ${targetFormat.toUpperCase()} format`}
+                    style={{
+                      width: "100%",
+                      maxHeight: 360,
+                      objectFit: "contain",
+                      display: "block",
+                      borderRadius: 2,
+                      boxShadow: "0 4px 32px rgba(0,0,0,0.7)",
+                    }}
+                  />
+                </div>
+
+                {/* Footer info + download */}
+                <div
+                  className="px-5 pb-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+                  style={{ borderTop: "1px solid rgba(225,0,0,0.1)" }}
+                >
+                  <div className="pt-4">
+                    <p
+                      className="font-body text-xs tracking-widest uppercase"
+                      style={{
+                        color: "rgba(255,255,255,0.35)",
+                        letterSpacing: "0.12em",
+                      }}
+                    >
+                      Format:{" "}
+                      <span style={{ color: "rgba(225,0,0,0.85)" }}>
+                        {targetFormat.toUpperCase()}
+                      </span>
+                    </p>
+                    <p
+                      className="font-body text-xs mt-1"
+                      style={{ color: "rgba(255,255,255,0.2)" }}
+                    >
+                      Converted from{" "}
+                      {sourceFile?.type.split("/")[1]?.toUpperCase() ??
+                        "source"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    data-ocid="img-converter.download_button"
+                    onClick={handleDownload}
+                    className="btn-outline-red font-bebas tracking-widest uppercase"
+                    style={{
+                      padding: "12px 24px",
+                      fontSize: "0.9rem",
+                      borderRadius: 2,
+                      marginTop: "1rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    ↓ DOWNLOAD {targetFormat.toUpperCase()}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Contact Section ───────────────────────────────────────────────────────────
 function ContactSection() {
   const headerRef = useScrollReveal();
@@ -4289,6 +4958,7 @@ export default function App() {
         <VisitorCounterSection />
         <YouTubeThumbnailSection />
         <InstagramReelDownloaderSection />
+        <ImageConverterSection />
         <ContactSection />
       </main>
       <Footer />
