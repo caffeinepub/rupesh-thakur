@@ -195,6 +195,91 @@ function useStaggerReveal(threshold = 0.1) {
   return ref;
 }
 
+// ── Visitor Map: pre-computed land dot grid (module level for perf) ──────────
+interface LandDot {
+  cx: number;
+  cy: number;
+}
+
+function latLngToSvg(lat: number, lng: number): { x: number; y: number } {
+  return {
+    x: ((lng + 180) / 360) * 1000,
+    y: ((90 - lat) / 180) * 500,
+  };
+}
+
+function isLand(lat: number, lng: number): boolean {
+  // North America
+  if (lng >= -170 && lng <= -50 && lat >= 15 && lat <= 80) return true;
+  // South America
+  if (lng >= -82 && lng <= -34 && lat >= -56 && lat <= 13) return true;
+  // Europe
+  if (lng >= -25 && lng <= 45 && lat >= 35 && lat <= 72) return true;
+  // Africa
+  if (lng >= -20 && lng <= 52 && lat >= -36 && lat <= 38) return true;
+  // Asia (main)
+  if (lng >= 25 && lng <= 150 && lat >= 0 && lat <= 80) return true;
+  // Southeast Asia islands
+  if (lng >= 95 && lng <= 145 && lat >= -10 && lat <= 25) return true;
+  // Australia
+  if (lng >= 113 && lng <= 155 && lat >= -44 && lat <= -10) return true;
+  // New Zealand
+  if (lng >= 165 && lng <= 180 && lat >= -47 && lat <= -34) return true;
+  // Greenland
+  if (lng >= -60 && lng <= -15 && lat >= 59 && lat <= 85) return true;
+  // Japan
+  if (lng >= 129 && lng <= 146 && lat >= 30 && lat <= 46) return true;
+  return false;
+}
+
+const LAND_DOTS: LandDot[] = (() => {
+  const dots: LandDot[] = [];
+  for (let lat = -80; lat <= 80; lat += 10) {
+    for (let lng = -180; lng <= 180; lng += 10) {
+      if (isLand(lat, lng)) {
+        const { x, y } = latLngToSvg(lat, lng);
+        dots.push({ cx: x, cy: y });
+      }
+    }
+  }
+  return dots;
+})();
+
+interface CityMarker {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+const CITY_MARKERS: CityMarker[] = [
+  { name: "New York", lat: 40.7, lng: -74.0 },
+  { name: "Los Angeles", lat: 34.0, lng: -118.2 },
+  { name: "Toronto", lat: 43.7, lng: -79.4 },
+  { name: "Mexico City", lat: 19.4, lng: -99.1 },
+  { name: "São Paulo", lat: -23.5, lng: -46.6 },
+  { name: "Buenos Aires", lat: -34.6, lng: -58.4 },
+  { name: "Bogotá", lat: 4.7, lng: -74.1 },
+  { name: "London", lat: 51.5, lng: -0.1 },
+  { name: "Paris", lat: 48.9, lng: 2.3 },
+  { name: "Berlin", lat: 52.5, lng: 13.4 },
+  { name: "Moscow", lat: 55.8, lng: 37.6 },
+  { name: "Madrid", lat: 40.4, lng: -3.7 },
+  { name: "Rome", lat: 41.9, lng: 12.5 },
+  { name: "Amsterdam", lat: 52.4, lng: 4.9 },
+  { name: "Lagos", lat: 6.5, lng: 3.4 },
+  { name: "Cairo", lat: 30.0, lng: 31.2 },
+  { name: "Nairobi", lat: -1.3, lng: 36.8 },
+  { name: "Johannesburg", lat: -26.2, lng: 28.0 },
+  { name: "Mumbai", lat: 19.1, lng: 72.9 },
+  { name: "Delhi", lat: 28.6, lng: 77.2 },
+  { name: "Tokyo", lat: 35.7, lng: 139.7 },
+  { name: "Beijing", lat: 39.9, lng: 116.4 },
+  { name: "Bangkok", lat: 13.8, lng: 100.5 },
+  { name: "Dubai", lat: 25.2, lng: 55.3 },
+  { name: "Singapore", lat: 1.3, lng: 103.8 },
+  { name: "Sydney", lat: -33.9, lng: 151.2 },
+];
+
 // ── Skills data ──────────────────────────────────────────────────────────────
 const skills = [
   {
@@ -294,19 +379,24 @@ function Navigation() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            {["about", "skills", "vision", "achievements", "contact"].map(
-              (id) => (
-                <button
-                  type="button"
-                  key={id}
-                  onClick={() => scrollTo(id)}
-                  className="nav-link"
-                  data-ocid={`nav.link.${id}`}
-                >
-                  {id}
-                </button>
-              ),
-            )}
+            {[
+              "about",
+              "skills",
+              "vision",
+              "achievements",
+              "map",
+              "contact",
+            ].map((id) => (
+              <button
+                type="button"
+                key={id}
+                onClick={() => scrollTo(id === "map" ? "visitor-map" : id)}
+                className="nav-link"
+                data-ocid={`nav.link.${id}`}
+              >
+                {id}
+              </button>
+            ))}
           </div>
 
           {/* Mobile hamburger */}
@@ -332,12 +422,12 @@ function Navigation() {
         }}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
-          {["about", "skills", "vision", "achievements", "contact"].map(
+          {["about", "skills", "vision", "achievements", "map", "contact"].map(
             (id) => (
               <button
                 type="button"
                 key={id}
-                onClick={() => scrollTo(id)}
+                onClick={() => scrollTo(id === "map" ? "visitor-map" : id)}
                 className="nav-link text-left py-2"
               >
                 {id}
@@ -1783,6 +1873,379 @@ function AchievementsSection() {
   );
 }
 
+// ── Visitor Map Section ───────────────────────────────────────────────────────
+function VisitorMapSection() {
+  const revealRef = useScrollReveal(0.1);
+  const [hoveredCity, setHoveredCity] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const handleCityMouseEnter = (
+    city: CityMarker,
+    e: React.MouseEvent<SVGCircleElement>,
+  ) => {
+    setHoveredCity(city.name);
+    const rect = (
+      e.currentTarget.closest("svg") as SVGSVGElement
+    ).getBoundingClientRect();
+    const svgPt = latLngToSvg(city.lat, city.lng);
+    // Convert SVG coords to screen coords
+    const scaleX = rect.width / 1000;
+    const scaleY = rect.height / 500;
+    setTooltipPos({
+      x: rect.left + svgPt.x * scaleX,
+      y: rect.top + svgPt.y * scaleY,
+    });
+  };
+
+  const handleCityMouseLeave = () => {
+    setHoveredCity(null);
+  };
+
+  return (
+    <section
+      id="visitor-map"
+      data-ocid="visitor-map.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* CSS for map-ping animation */}
+      <style>{`
+        @keyframes map-ping {
+          0% { r: 3; opacity: 0.9; }
+          100% { r: 14; opacity: 0; }
+        }
+        @keyframes map-ping-inner {
+          0% { opacity: 1; }
+          50% { opacity: 0.7; }
+          100% { opacity: 1; }
+        }
+        .map-city-ring {
+          animation: map-ping 2.2s ease-out infinite;
+        }
+        .map-city-dot {
+          animation: map-ping-inner 2.2s ease-in-out infinite;
+        }
+      `}</style>
+
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.45), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.45), transparent)",
+        }}
+      />
+
+      {/* Atmospheric red radial glow behind map */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 600,
+          background:
+            "radial-gradient(ellipse, rgba(225,0,0,0.1) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 lg:px-12">
+        {/* Header */}
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal text-center mb-14"
+        >
+          <div className="inline-flex items-center gap-3 mb-6">
+            <span
+              className="h-px w-12"
+              style={{
+                background: "var(--red-bright)",
+                boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+              }}
+            />
+            <span
+              className="font-display text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "var(--red-bright)" }}
+            >
+              Global Visitors
+            </span>
+            <span
+              className="h-px w-12"
+              style={{
+                background: "var(--red-bright)",
+                boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+              }}
+            />
+          </div>
+          <h2 className="font-bebas text-5xl md:text-6xl lg:text-7xl tracking-wider text-white red-underline-center">
+            WHERE YOU'RE FROM
+          </h2>
+          <p
+            className="mt-6 font-body mx-auto"
+            style={{
+              color: "rgba(255,255,255,0.45)",
+              fontSize: "1rem",
+              maxWidth: "420px",
+            }}
+          >
+            People discovering this world from every corner of the globe.
+          </p>
+        </div>
+
+        {/* Map container */}
+        <div
+          className="relative w-full"
+          style={{
+            background: "rgba(8,8,8,0.97)",
+            border: "1px solid rgba(225,0,0,0.15)",
+            borderRadius: 4,
+            boxShadow:
+              "0 0 40px rgba(225,0,0,0.08), 0 0 100px rgba(225,0,0,0.03), inset 0 0 80px rgba(0,0,0,0.6)",
+            overflow: "hidden",
+          }}
+        >
+          {/* Corner accents */}
+          <div
+            className="absolute top-0 left-0 w-16 h-16 pointer-events-none z-10"
+            style={{
+              borderTop: "2px solid rgba(225,0,0,0.6)",
+              borderLeft: "2px solid rgba(225,0,0,0.6)",
+              boxShadow: "0 0 10px rgba(225,0,0,0.3)",
+            }}
+          />
+          <div
+            className="absolute top-0 right-0 w-16 h-16 pointer-events-none z-10"
+            style={{
+              borderTop: "2px solid rgba(225,0,0,0.6)",
+              borderRight: "2px solid rgba(225,0,0,0.6)",
+              boxShadow: "0 0 10px rgba(225,0,0,0.3)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none z-10"
+            style={{
+              borderBottom: "2px solid rgba(225,0,0,0.6)",
+              borderLeft: "2px solid rgba(225,0,0,0.6)",
+              boxShadow: "0 0 10px rgba(225,0,0,0.3)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none z-10"
+            style={{
+              borderBottom: "2px solid rgba(225,0,0,0.6)",
+              borderRight: "2px solid rgba(225,0,0,0.6)",
+              boxShadow: "0 0 10px rgba(225,0,0,0.3)",
+            }}
+          />
+
+          {/* SVG World Map */}
+          <svg
+            ref={svgRef}
+            role="img"
+            aria-labelledby="visitor-map-title"
+            viewBox="0 0 1000 500"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+            }}
+          >
+            <title id="visitor-map-title">
+              World map showing visitor locations
+            </title>
+            {/* Map background */}
+            <rect width="1000" height="500" fill="#060606" />
+
+            {/* Subtle grid lines */}
+            {[-60, -30, 0, 30, 60].map((lat) => {
+              const y = ((90 - lat) / 180) * 500;
+              return (
+                <line
+                  key={`lat-${lat}`}
+                  x1="0"
+                  y1={y}
+                  x2="1000"
+                  y2={y}
+                  stroke="rgba(225,0,0,0.05)"
+                  strokeWidth="0.5"
+                />
+              );
+            })}
+            {[-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150].map((lng) => {
+              const x = ((lng + 180) / 360) * 1000;
+              return (
+                <line
+                  key={`lng-${lng}`}
+                  x1={x}
+                  y1="0"
+                  x2={x}
+                  y2="500"
+                  stroke="rgba(225,0,0,0.05)"
+                  strokeWidth="0.5"
+                />
+              );
+            })}
+
+            {/* Land dot-matrix */}
+            {LAND_DOTS.map((dot) => (
+              <circle
+                key={`land-${dot.cx.toFixed(1)}-${dot.cy.toFixed(1)}`}
+                cx={dot.cx}
+                cy={dot.cy}
+                r="2.8"
+                fill="rgba(100,20,20,0.55)"
+              />
+            ))}
+
+            {/* Equator line */}
+            <line
+              x1="0"
+              y1="250"
+              x2="1000"
+              y2="250"
+              stroke="rgba(225,0,0,0.12)"
+              strokeWidth="0.8"
+              strokeDasharray="4 6"
+            />
+
+            {/* City visitor dots with pulsing rings */}
+            {CITY_MARKERS.map((city, i) => {
+              const { x, y } = latLngToSvg(city.lat, city.lng);
+              const delay = `${(i * 0.18) % 2.2}s`;
+              return (
+                <g key={city.name}>
+                  {/* Outer pulsing ring */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="3"
+                    fill="none"
+                    stroke="#e10000"
+                    strokeWidth="1.5"
+                    opacity="0.9"
+                    className="map-city-ring"
+                    style={{ animationDelay: delay }}
+                  />
+                  {/* Second ring for depth */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="3"
+                    fill="none"
+                    stroke="rgba(225,0,0,0.4)"
+                    strokeWidth="1"
+                    opacity="0.5"
+                    className="map-city-ring"
+                    style={{ animationDelay: `${(i * 0.18 + 0.6) % 2.2}s` }}
+                  />
+                  {/* Core dot — always visible, interactive */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="3.5"
+                    fill="#e10000"
+                    className="map-city-dot"
+                    style={{
+                      animationDelay: delay,
+                      cursor: "pointer",
+                      filter: "drop-shadow(0 0 4px rgba(225,0,0,0.9))",
+                    }}
+                    onMouseEnter={(e) => handleCityMouseEnter(city, e)}
+                    onMouseLeave={handleCityMouseLeave}
+                  >
+                    <title>{city.name}</title>
+                  </circle>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* Tooltip */}
+        {hoveredCity && (
+          <div
+            style={{
+              position: "fixed",
+              left: tooltipPos.x + 12,
+              top: tooltipPos.y - 32,
+              background: "rgba(10,0,0,0.95)",
+              border: "1px solid rgba(225,0,0,0.5)",
+              color: "#fff",
+              padding: "4px 12px",
+              borderRadius: 2,
+              fontSize: "0.75rem",
+              fontFamily: "var(--font-display)",
+              letterSpacing: "0.08em",
+              pointerEvents: "none",
+              zIndex: 9999,
+              boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ color: "var(--red-bright)" }}>●</span> {hoveredCity}
+          </div>
+        )}
+
+        {/* Stats bar */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+          {[
+            { value: "26", label: "Countries" },
+            { value: "6", label: "Continents" },
+            { value: "∞", label: "Always Growing" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center gap-3 px-6 py-3"
+              style={{
+                background: "rgba(8,8,8,0.8)",
+                border: "1px solid rgba(225,0,0,0.15)",
+                borderRadius: 2,
+              }}
+            >
+              <span
+                className="font-bebas text-2xl"
+                style={{
+                  color: "var(--red-bright)",
+                  textShadow: "0 0 12px rgba(225,0,0,0.6)",
+                  lineHeight: 1,
+                }}
+              >
+                {stat.value}
+              </span>
+              <span
+                className="font-display text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "rgba(255,255,255,0.45)" }}
+              >
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── WhatsApp SVG Icon ─────────────────────────────────────────────────────────
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -2115,6 +2578,7 @@ export default function App() {
         <SkillsSection />
         <VisionSection />
         <AchievementsSection />
+        <VisitorMapSection />
         <VisitorCounterSection />
         <ContactSection />
       </main>
