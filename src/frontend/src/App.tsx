@@ -488,16 +488,26 @@ function Navigation() {
               "achievements",
               "inspiration",
               "map",
+              "tools",
+              "ig-reel",
               "contact",
             ].map((id) => (
               <button
                 type="button"
                 key={id}
-                onClick={() => scrollTo(id === "map" ? "visitor-map" : id)}
+                onClick={() =>
+                  scrollTo(
+                    id === "map"
+                      ? "visitor-map"
+                      : id === "tools"
+                        ? "yt-thumb"
+                        : id,
+                  )
+                }
                 className="nav-link"
                 data-ocid={`nav.link.${id}`}
               >
-                {id}
+                {id === "ig-reel" ? "ig reel" : id}
               </button>
             ))}
           </div>
@@ -532,15 +542,25 @@ function Navigation() {
             "achievements",
             "inspiration",
             "map",
+            "tools",
+            "ig-reel",
             "contact",
           ].map((id) => (
             <button
               type="button"
               key={id}
-              onClick={() => scrollTo(id === "map" ? "visitor-map" : id)}
+              onClick={() =>
+                scrollTo(
+                  id === "map"
+                    ? "visitor-map"
+                    : id === "tools"
+                      ? "yt-thumb"
+                      : id,
+                )
+              }
               className="nav-link text-left py-2"
             >
-              {id}
+              {id === "ig-reel" ? "ig reel" : id}
             </button>
           ))}
         </div>
@@ -2982,6 +3002,894 @@ function WhatsAppIcon({ size = 22 }: { size?: number }) {
   );
 }
 
+// ── YouTube Thumbnail Downloader Section ──────────────────────────────────────
+function extractYouTubeId(url: string): string | null {
+  const trimmed = url.trim();
+  // youtu.be/VIDEO_ID
+  const shortMatch = trimmed.match(
+    /^(?:https?:\/\/)?youtu\.be\/([A-Za-z0-9_-]{11})/,
+  );
+  if (shortMatch) return shortMatch[1];
+  // youtube.com/watch?v=VIDEO_ID
+  const watchMatch = trimmed.match(/[?&]v=([A-Za-z0-9_-]{11})(?:[&?#]|$)/);
+  if (watchMatch) return watchMatch[1];
+  // youtube.com/shorts/VIDEO_ID or youtube.com/embed/VIDEO_ID
+  const pathMatch = trimmed.match(
+    /(?:\/shorts\/|\/embed\/)([A-Za-z0-9_-]{11})(?:[/?#]|$)/,
+  );
+  if (pathMatch) return pathMatch[1];
+  return null;
+}
+
+function YouTubeThumbnailSection() {
+  const revealRef = useScrollReveal(0.15);
+  const [url, setUrl] = useState("");
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [imageStatus, setImageStatus] = useState<
+    "idle" | "loading" | "loaded" | "error"
+  >("idle");
+  const [thumbnailSrc, setThumbnailSrc] = useState<string>("");
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setVideoId(null);
+    setImageStatus("idle");
+    const id = extractYouTubeId(url);
+    if (!id) {
+      setError(
+        "Invalid YouTube URL. Paste a full YouTube link (watch, shorts, or youtu.be).",
+      );
+      return;
+    }
+    setVideoId(id);
+    setThumbnailSrc(`https://img.youtube.com/vi/${id}/maxresdefault.jpg`);
+    setImageStatus("loading");
+  };
+
+  const handleImageError = () => {
+    if (videoId && thumbnailSrc.includes("maxresdefault")) {
+      setThumbnailSrc(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
+    } else {
+      setImageStatus("error");
+    }
+  };
+
+  const handleImageLoad = () => {
+    setImageStatus("loaded");
+  };
+
+  const handleDownload = async () => {
+    if (!thumbnailSrc || !videoId) return;
+    setIsDownloading(true);
+    try {
+      const response = await fetch(thumbnailSrc);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `thumbnail-${videoId}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // fallback: open in new tab
+      window.open(thumbnailSrc, "_blank");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <section
+      id="yt-thumb"
+      data-ocid="yt-thumb.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+
+      {/* Atmospheric red radial */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 500,
+          background:
+            "radial-gradient(ellipse, rgba(225,0,0,0.1) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-12">
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal"
+        >
+          {/* Section label */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-3">
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+              <span
+                className="font-display text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "var(--red-bright)" }}
+              >
+                Free Tool
+              </span>
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Section heading */}
+          <h2
+            className="font-bebas text-center tracking-wider mb-4 red-underline-center"
+            style={{
+              fontSize: "clamp(2rem, 6vw, 4.5rem)",
+              color: "#fff",
+              textShadow:
+                "0 0 30px rgba(225,0,0,0.2), 0 0 80px rgba(225,0,0,0.08)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            YOUTUBE THUMBNAIL DOWNLOADER
+          </h2>
+          <p
+            className="text-center font-body mt-4 mb-12 mx-auto"
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "1rem",
+              maxWidth: "460px",
+            }}
+          >
+            Paste any YouTube link below to download its thumbnail in the
+            highest quality available.
+          </p>
+
+          {/* Input form */}
+          <form onSubmit={handleSubmit} className="mb-10">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type="url"
+                  data-ocid="yt-thumb.input"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full font-body"
+                  aria-label="YouTube video URL"
+                  style={{
+                    background: "rgba(8,8,8,0.97)",
+                    border: "1px solid rgba(225,0,0,0.25)",
+                    borderRadius: 2,
+                    padding: "14px 18px",
+                    color: "#fff",
+                    fontSize: "0.95rem",
+                    outline: "none",
+                    letterSpacing: "0.01em",
+                    boxShadow:
+                      "0 0 12px rgba(225,0,0,0.06), inset 0 0 30px rgba(0,0,0,0.5)",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(225,0,0,0.7)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 2px rgba(225,0,0,0.15), 0 0 16px rgba(225,0,0,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(225,0,0,0.25)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 12px rgba(225,0,0,0.06), inset 0 0 30px rgba(0,0,0,0.5)";
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                data-ocid="yt-thumb.submit_button"
+                className="btn-red font-bebas tracking-widest uppercase"
+                style={{
+                  padding: "14px 28px",
+                  fontSize: "1rem",
+                  borderRadius: 2,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                GET THUMBNAIL
+              </button>
+            </div>
+          </form>
+
+          {/* Error state */}
+          {error && (
+            <div
+              data-ocid="yt-thumb.error_state"
+              className="flex items-center gap-3 mb-8 p-4"
+              style={{
+                background: "rgba(225,0,0,0.07)",
+                border: "1px solid rgba(225,0,0,0.3)",
+                borderRadius: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "var(--red-bright)",
+                  flexShrink: 0,
+                  boxShadow: "0 0 6px rgba(225,0,0,0.8)",
+                }}
+              />
+              <p
+                className="font-body text-sm"
+                style={{ color: "rgba(255,100,100,0.95)" }}
+              >
+                {error}
+              </p>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {imageStatus === "loading" && (
+            <div
+              data-ocid="yt-thumb.loading_state"
+              className="mb-8 flex flex-col items-center gap-4"
+            >
+              <div
+                className="w-full"
+                style={{
+                  aspectRatio: "16/9",
+                  maxHeight: 400,
+                  background:
+                    "linear-gradient(90deg, rgba(225,0,0,0.05) 0%, rgba(225,0,0,0.12) 50%, rgba(225,0,0,0.05) 100%)",
+                  border: "1px solid rgba(225,0,0,0.15)",
+                  borderRadius: 4,
+                  animation: "pulse 1.8s ease-in-out infinite",
+                }}
+              />
+              <p
+                className="font-display text-xs tracking-widest uppercase"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+              >
+                Fetching thumbnail…
+              </p>
+            </div>
+          )}
+
+          {/* Hidden image for loading/error detection */}
+          {(imageStatus === "loading" ||
+            imageStatus === "loaded" ||
+            imageStatus === "error") &&
+            videoId && (
+              <img
+                src={thumbnailSrc}
+                alt=""
+                aria-hidden="true"
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+                style={{ display: "none" }}
+              />
+            )}
+
+          {/* Thumbnail card */}
+          {imageStatus === "loaded" && videoId && (
+            <div
+              data-ocid="yt-thumb.card"
+              className="relative"
+              style={{
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(225,0,0,0.25)",
+                borderRadius: 4,
+                boxShadow:
+                  "0 0 30px rgba(225,0,0,0.12), 0 0 80px rgba(225,0,0,0.05), inset 0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(225,0,0,0.08)",
+                overflow: "hidden",
+              }}
+            >
+              {/* Corner accents */}
+              <div
+                className="absolute top-0 left-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderTop: "3px solid var(--red-bright)",
+                  borderLeft: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute top-0 right-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderTop: "3px solid var(--red-bright)",
+                  borderRight: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderBottom: "3px solid var(--red-bright)",
+                  borderLeft: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 right-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderBottom: "3px solid var(--red-bright)",
+                  borderRight: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+
+              {/* Thumbnail image */}
+              <div className="p-5 pb-4">
+                <img
+                  src={thumbnailSrc}
+                  alt="YouTube video thumbnail"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    borderRadius: 2,
+                    boxShadow: "0 4px 32px rgba(0,0,0,0.7)",
+                  }}
+                />
+              </div>
+
+              {/* Footer info + download */}
+              <div
+                className="px-5 pb-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+                style={{ borderTop: "1px solid rgba(225,0,0,0.1)" }}
+              >
+                <div className="pt-4">
+                  <p
+                    className="font-body text-xs tracking-widest uppercase"
+                    style={{
+                      color: "rgba(255,255,255,0.35)",
+                      letterSpacing: "0.12em",
+                    }}
+                  >
+                    Video ID:{" "}
+                    <span style={{ color: "rgba(225,0,0,0.8)" }}>
+                      {videoId}
+                    </span>
+                  </p>
+                  <p
+                    className="font-body text-xs mt-1"
+                    style={{ color: "rgba(255,255,255,0.2)" }}
+                  >
+                    {thumbnailSrc.includes("maxresdefault")
+                      ? "High Quality (1280×720)"
+                      : "Standard Quality (480×360)"}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  data-ocid="yt-thumb.download_button"
+                  onClick={() => void handleDownload()}
+                  disabled={isDownloading}
+                  className="btn-outline-red font-bebas tracking-widest uppercase"
+                  style={{
+                    padding: "12px 24px",
+                    fontSize: "0.9rem",
+                    borderRadius: 2,
+                    marginTop: "1rem",
+                    opacity: isDownloading ? 0.7 : 1,
+                    cursor: isDownloading ? "not-allowed" : "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {isDownloading ? "DOWNLOADING…" : "↓ DOWNLOAD THUMBNAIL"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Error loading image */}
+          {imageStatus === "error" && (
+            <div
+              data-ocid="yt-thumb.error_state"
+              className="flex flex-col items-center gap-3 py-12 px-6 text-center"
+              style={{
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(225,0,0,0.2)",
+                borderRadius: 4,
+              }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: "rgba(225,0,0,0.08)",
+                  border: "1px solid rgba(225,0,0,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  className="font-bebas text-2xl"
+                  style={{ color: "var(--red-bright)" }}
+                >
+                  !
+                </span>
+              </div>
+              <p
+                className="font-body"
+                style={{ color: "rgba(255,100,100,0.85)", fontSize: "0.95rem" }}
+              >
+                Could not load thumbnail. Make sure the video is public and the
+                URL is correct.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Instagram Reel Downloader Section ────────────────────────────────────────
+function extractInstagramReelId(url: string): string | null {
+  const trimmed = url.trim();
+  // Matches /reel/CODE/, /p/CODE/, /tv/CODE/
+  const match = trimmed.match(
+    /instagram\.com\/(?:reel|p|tv)\/([A-Za-z0-9_-]{6,20})/,
+  );
+  return match ? match[1] : null;
+}
+
+function InstagramReelDownloaderSection() {
+  const revealRef = useScrollReveal(0.15);
+  const [url, setUrl] = useState("");
+  const [reelId, setReelId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"idle" | "ready">("idle");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setReelId(null);
+    setStep("idle");
+    const id = extractInstagramReelId(url.trim());
+    if (!id) {
+      setError(
+        "Invalid Instagram URL. Paste a link like: https://www.instagram.com/reel/XXXX/",
+      );
+      return;
+    }
+    setReelId(id);
+    setStep("ready");
+  };
+
+  const handleReset = () => {
+    setUrl("");
+    setReelId(null);
+    setError(null);
+    setStep("idle");
+  };
+
+  return (
+    <section
+      id="ig-reel"
+      data-ocid="ig-reel.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+
+      {/* Atmospheric red radial */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 500,
+          background:
+            "radial-gradient(ellipse, rgba(225,0,0,0.1) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-12">
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal"
+        >
+          {/* Section label */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-3">
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+              <span
+                className="font-display text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "var(--red-bright)" }}
+              >
+                Free Tool
+              </span>
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Section heading */}
+          <h2
+            className="font-bebas text-center tracking-wider mb-4 red-underline-center"
+            style={{
+              fontSize: "clamp(2rem, 6vw, 4.5rem)",
+              color: "#fff",
+              textShadow:
+                "0 0 30px rgba(225,0,0,0.2), 0 0 80px rgba(225,0,0,0.08)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            INSTAGRAM REEL DOWNLOADER
+          </h2>
+          <p
+            className="text-center font-body mt-4 mb-12 mx-auto"
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "1rem",
+              maxWidth: "480px",
+            }}
+          >
+            Paste any Instagram Reel or video link below. We'll take you
+            directly to the reel so you can save it to your device.
+          </p>
+
+          {/* Input form */}
+          <form onSubmit={handleSubmit} className="mb-10">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type="url"
+                  data-ocid="ig-reel.input"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="https://www.instagram.com/reel/..."
+                  className="w-full font-body"
+                  aria-label="Instagram Reel URL"
+                  style={{
+                    background: "rgba(8,8,8,0.97)",
+                    border: "1px solid rgba(225,0,0,0.25)",
+                    borderRadius: 2,
+                    padding: "14px 18px",
+                    color: "#fff",
+                    fontSize: "0.95rem",
+                    outline: "none",
+                    letterSpacing: "0.01em",
+                    boxShadow:
+                      "0 0 12px rgba(225,0,0,0.06), inset 0 0 30px rgba(0,0,0,0.5)",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(225,0,0,0.7)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 2px rgba(225,0,0,0.15), 0 0 16px rgba(225,0,0,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(225,0,0,0.25)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 12px rgba(225,0,0,0.06), inset 0 0 30px rgba(0,0,0,0.5)";
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                data-ocid="ig-reel.submit_button"
+                className="btn-red font-bebas tracking-widest uppercase"
+                style={{
+                  padding: "14px 28px",
+                  fontSize: "1rem",
+                  borderRadius: 2,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                GET REEL
+              </button>
+            </div>
+          </form>
+
+          {/* Error state */}
+          {error && (
+            <div
+              data-ocid="ig-reel.error_state"
+              className="flex items-center gap-3 mb-8 p-4"
+              style={{
+                background: "rgba(225,0,0,0.07)",
+                border: "1px solid rgba(225,0,0,0.3)",
+                borderRadius: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "var(--red-bright)",
+                  flexShrink: 0,
+                  boxShadow: "0 0 6px rgba(225,0,0,0.8)",
+                }}
+              />
+              <p
+                className="font-body text-sm"
+                style={{ color: "rgba(255,100,100,0.95)" }}
+              >
+                {error}
+              </p>
+            </div>
+          )}
+
+          {/* Result card */}
+          {step === "ready" && reelId && (
+            <div
+              data-ocid="ig-reel.card"
+              className="relative p-8 md:p-10"
+              style={{
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(225,0,0,0.25)",
+                borderRadius: 4,
+                boxShadow:
+                  "0 0 30px rgba(225,0,0,0.12), 0 0 80px rgba(225,0,0,0.05), inset 0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(225,0,0,0.08)",
+              }}
+            >
+              {/* Corner accents */}
+              <div
+                className="absolute top-0 left-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderTop: "3px solid var(--red-bright)",
+                  borderLeft: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute top-0 right-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderTop: "3px solid var(--red-bright)",
+                  borderRight: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderBottom: "3px solid var(--red-bright)",
+                  borderLeft: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 right-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderBottom: "3px solid var(--red-bright)",
+                  borderRight: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+
+              {/* Instagram icon + reel ID */}
+              <div className="flex flex-col items-center text-center gap-5">
+                {/* Instagram icon circle */}
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: "50%",
+                    background: "rgba(225,0,0,0.08)",
+                    border: "2px solid rgba(225,0,0,0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow:
+                      "0 0 24px rgba(225,0,0,0.25), 0 0 60px rgba(225,0,0,0.08)",
+                    animation: "profile-glow-pulse 3s ease-in-out infinite",
+                  }}
+                >
+                  <Instagram size={30} style={{ color: "var(--red-bright)" }} />
+                </div>
+
+                <div>
+                  <p
+                    className="font-bebas tracking-widest mb-1"
+                    style={{
+                      fontSize: "1.4rem",
+                      color: "#fff",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    Reel Detected
+                  </p>
+                  <p
+                    className="font-body text-xs tracking-widest uppercase"
+                    style={{ color: "rgba(255,255,255,0.35)" }}
+                  >
+                    Reel ID:{" "}
+                    <span style={{ color: "rgba(225,0,0,0.8)" }}>{reelId}</span>
+                  </p>
+                </div>
+
+                {/* Divider */}
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: 360,
+                    height: 1,
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+                  }}
+                />
+
+                {/* Instructions */}
+                <div
+                  className="w-full max-w-lg"
+                  style={{
+                    background: "rgba(225,0,0,0.05)",
+                    border: "1px solid rgba(225,0,0,0.15)",
+                    borderRadius: 4,
+                    padding: "16px 20px",
+                  }}
+                >
+                  <p
+                    className="font-bebas tracking-widest mb-3"
+                    style={{ color: "var(--red-bright)", fontSize: "1rem" }}
+                  >
+                    HOW TO DOWNLOAD
+                  </p>
+                  <ol className="text-left space-y-2">
+                    {[
+                      'Click "Open Reel" to open it on Instagram.',
+                      "On mobile: tap the three dots (⋯) → Save to device.",
+                      "On desktop: right-click the video → Save video as…",
+                      "Or use the Instagram app's built-in save/bookmark.",
+                    ].map((step, i) => (
+                      <li
+                        key={step}
+                        className="font-body text-sm flex items-start gap-2"
+                        style={{ color: "rgba(255,255,255,0.65)" }}
+                      >
+                        <span
+                          style={{
+                            color: "var(--red-bright)",
+                            fontWeight: 700,
+                            flexShrink: 0,
+                            minWidth: 16,
+                          }}
+                        >
+                          {i + 1}.
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                  <a
+                    href={url.trim()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ocid="ig-reel.open_modal_button"
+                    className="btn-red font-bebas tracking-widest uppercase flex-1 flex items-center justify-center gap-2"
+                    style={{
+                      padding: "13px 20px",
+                      fontSize: "1rem",
+                      borderRadius: 2,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Instagram size={18} />
+                    OPEN REEL
+                  </a>
+                  <button
+                    type="button"
+                    data-ocid="ig-reel.cancel_button"
+                    onClick={handleReset}
+                    className="btn-outline-red font-bebas tracking-widest uppercase flex-1"
+                    style={{
+                      padding: "13px 20px",
+                      fontSize: "1rem",
+                      borderRadius: 2,
+                    }}
+                  >
+                    RESET
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Note about browser limitations */}
+          <p
+            className="text-center mt-8 font-body text-xs"
+            style={{ color: "rgba(255,255,255,0.22)", lineHeight: 1.7 }}
+          >
+            Instagram does not allow direct video downloads from browsers. Use
+            the "Open Reel" button and save from within the Instagram app.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Contact Section ───────────────────────────────────────────────────────────
 function ContactSection() {
   const headerRef = useScrollReveal();
@@ -3379,6 +4287,8 @@ export default function App() {
         <DailyInspirationSection />
         <VisitorMapSection />
         <VisitorCounterSection />
+        <YouTubeThumbnailSection />
+        <InstagramReelDownloaderSection />
         <ContactSection />
       </main>
       <Footer />
