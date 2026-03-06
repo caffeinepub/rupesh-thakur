@@ -549,6 +549,150 @@ function Navigation() {
   );
 }
 
+// ── Profile Smoke Canvas ──────────────────────────────────────────────────────
+interface SmokeParticle {
+  x: number;
+  y: number;
+  radius: number;
+  vx: number;
+  vy: number;
+  opacity: number;
+  life: number;
+  maxLife: number;
+  noiseX: number;
+  noiseY: number;
+  noiseSpeedX: number;
+  noiseSpeedY: number;
+  hue: number;
+}
+
+function ProfileSmokeCanvas({ size }: { size: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const DIM = size;
+    canvas.width = DIM;
+    canvas.height = DIM;
+
+    let animId: number;
+    let tick = 0;
+
+    const cx = DIM / 2;
+    const cy = DIM / 2;
+
+    const spawnParticle = (): SmokeParticle => {
+      // Spawn on a ring around the photo
+      const spawnRadius = size * 0.38 + Math.random() * size * 0.18;
+      const angle = Math.random() * Math.PI * 2;
+      const maxLife = 200 + Math.random() * 220;
+      return {
+        x: cx + Math.cos(angle) * spawnRadius,
+        y: cy + Math.sin(angle) * spawnRadius,
+        radius: 14 + Math.random() * 28,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.18 - 0.06,
+        opacity: 0,
+        life: 0,
+        maxLife,
+        noiseX: Math.random() * 1000,
+        noiseY: Math.random() * 1000,
+        noiseSpeedX: 0.002 + Math.random() * 0.003,
+        noiseSpeedY: 0.002 + Math.random() * 0.003,
+        hue: Math.random() < 0.7 ? 0 : 10, // mostly pure red, occasional warm crimson
+      };
+    };
+
+    const PARTICLE_COUNT = 22;
+    const particles: SmokeParticle[] = Array.from(
+      { length: PARTICLE_COUNT },
+      spawnParticle,
+    );
+    // Stagger initial lifetimes
+    particles.forEach((p, i) => {
+      p.life = (i / PARTICLE_COUNT) * p.maxLife;
+    });
+
+    const draw = () => {
+      tick++;
+      ctx.clearRect(0, 0, DIM, DIM);
+      ctx.filter = "blur(8px)";
+
+      for (const p of particles) {
+        p.life++;
+        if (p.life >= p.maxLife) {
+          // Respawn
+          Object.assign(p, spawnParticle());
+        }
+
+        const progress = p.life / p.maxLife;
+        // Fade in fast, hold, fade out slowly
+        const rawOpacity =
+          progress < 0.12
+            ? progress / 0.12
+            : progress > 0.72
+              ? (1 - progress) / 0.28
+              : 1;
+        p.opacity = rawOpacity * (0.07 + Math.random() * 0.01);
+
+        // Sinusoidal drift
+        p.x += p.vx + Math.sin(tick * p.noiseSpeedX + p.noiseX) * 0.35;
+        p.y += p.vy + Math.cos(tick * p.noiseSpeedY + p.noiseY) * 0.28;
+
+        // Grow slightly as they rise
+        const currentRadius = p.radius * (1 + progress * 0.6);
+
+        const gradient = ctx.createRadialGradient(
+          p.x,
+          p.y,
+          0,
+          p.x,
+          p.y,
+          currentRadius,
+        );
+        gradient.addColorStop(0, `hsla(${p.hue}, 100%, 35%, ${p.opacity})`);
+        gradient.addColorStop(
+          0.45,
+          `hsla(${p.hue}, 90%, 25%, ${p.opacity * 0.55})`,
+        );
+        gradient.addColorStop(1, `hsla(${p.hue}, 80%, 15%, 0)`);
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      }
+
+      ctx.filter = "none";
+      animId = requestAnimationFrame(draw);
+    };
+
+    animId = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animId);
+  }, [size]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: size,
+        height: size,
+        pointerEvents: "none",
+        zIndex: 0,
+        mixBlendMode: "screen",
+      }}
+    />
+  );
+}
+
 // ── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection() {
   const { mutate: incrementVisitor } = useIncrementVisitorCount();
@@ -748,31 +892,92 @@ function HeroSection() {
             marginBottom: "1.5rem",
           }}
         >
+          {/* Cinematic aura wrapper — wider to accommodate smoke canvas */}
           <div
             style={{
-              width: 128,
-              height: 128,
-              borderRadius: "50%",
-              padding: 4,
-              background:
-                "linear-gradient(135deg, rgba(225,0,0,0.9) 0%, rgba(120,0,0,0.6) 50%, rgba(225,0,0,0.9) 100%)",
-              boxShadow:
-                "0 0 24px rgba(225,0,0,0.7), 0 0 60px rgba(225,0,0,0.35), 0 0 120px rgba(225,0,0,0.15)",
-              animation: "profile-glow-pulse 3s ease-in-out infinite",
+              position: "relative",
+              width: 340,
+              height: 340,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <img
-              src="/assets/uploads/Picsart_25-10-19_16-04-16-616-1-1.jpg"
-              alt="Rupesh Thakur"
+            {/* Outermost diffuse bloom — sized relative to photo center */}
+            <div
               style={{
-                width: "100%",
-                height: "100%",
+                position: "absolute",
+                width: 240,
+                height: 240,
                 borderRadius: "50%",
-                objectFit: "cover",
-                objectPosition: "center top",
-                display: "block",
+                background:
+                  "radial-gradient(circle, rgba(180,0,0,0.22) 0%, rgba(120,0,0,0.12) 45%, transparent 72%)",
+                filter: "blur(18px)",
+                animation: "profile-glow-pulse 3s ease-in-out infinite",
+                pointerEvents: "none",
               }}
             />
+            {/* Mid-layer warm corona */}
+            <div
+              style={{
+                position: "absolute",
+                width: 184,
+                height: 184,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(225,0,0,0.30) 0%, rgba(160,0,0,0.14) 50%, transparent 72%)",
+                filter: "blur(10px)",
+                animation: "profile-glow-pulse 3s ease-in-out infinite",
+                animationDelay: "0.4s",
+                pointerEvents: "none",
+              }}
+            />
+            {/* Inner tight halo */}
+            <div
+              style={{
+                position: "absolute",
+                width: 148,
+                height: 148,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(255,30,30,0.18) 0%, rgba(200,0,0,0.10) 60%, transparent 80%)",
+                filter: "blur(6px)",
+                animation: "profile-glow-pulse 3s ease-in-out infinite",
+                animationDelay: "0.2s",
+                pointerEvents: "none",
+              }}
+            />
+            {/* Red smoke / energy canvas */}
+            <ProfileSmokeCanvas size={340} />
+            {/* Photo border ring */}
+            <div
+              style={{
+                position: "relative",
+                width: 128,
+                height: 128,
+                borderRadius: "50%",
+                padding: 4,
+                background:
+                  "linear-gradient(135deg, rgba(225,0,0,0.9) 0%, rgba(120,0,0,0.6) 50%, rgba(225,0,0,0.9) 100%)",
+                boxShadow:
+                  "0 0 24px rgba(225,0,0,0.7), 0 0 60px rgba(225,0,0,0.35), 0 0 120px rgba(225,0,0,0.15)",
+                animation: "profile-glow-pulse 3s ease-in-out infinite",
+                zIndex: 2,
+              }}
+            >
+              <img
+                src="/assets/uploads/file_0000000056f072089f221bcd2a43898d-1.png"
+                alt="Rupesh Thakur"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  objectPosition: "center top",
+                  display: "block",
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -2867,55 +3072,52 @@ function ContactSection() {
               target="_blank"
               rel="noopener noreferrer"
               data-ocid={`contact.${ch.id}.button`}
-              className="group flex-1 flex flex-col items-center justify-center gap-4 py-12 px-8 transition-all duration-300 cursor-pointer"
+              className="contact-btn-float group flex-1 flex flex-col items-center justify-center gap-4 py-12 px-8 cursor-pointer"
               style={{
                 background: "rgba(8,8,8,0.97)",
                 border: "1px solid rgba(225,0,0,0.18)",
                 borderRadius: 2,
-                boxShadow:
-                  "0 0 24px rgba(225,0,0,0.04), inset 0 0 40px rgba(225,0,0,0.02)",
+                boxShadow: "0 0 16px rgba(225,0,0,0.04)",
                 textDecoration: "none",
                 minHeight: 220,
+                transition:
+                  "border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.22,1,0.36,1), opacity 0.15s ease",
+                willChange: "transform",
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.border = "1px solid rgba(225,0,0,0.75)";
+                el.style.borderColor = "rgba(225,0,0,0.7)";
                 el.style.boxShadow =
-                  "0 0 40px rgba(225,0,0,0.45), 0 0 90px rgba(225,0,0,0.18), inset 0 0 60px rgba(225,0,0,0.06)";
-                el.style.transform = "translateY(-6px)";
+                  "0 0 32px rgba(225,0,0,0.35), 0 0 64px rgba(225,0,0,0.12)";
                 const iconWrap = el.querySelector(
                   ".contact-icon-wrap",
                 ) as HTMLElement;
                 if (iconWrap) {
                   iconWrap.style.background = "rgba(225,0,0,0.18)";
-                  iconWrap.style.borderColor = "rgba(225,0,0,0.7)";
-                  iconWrap.style.boxShadow = "0 0 24px rgba(225,0,0,0.5)";
+                  iconWrap.style.borderColor = "rgba(225,0,0,0.65)";
                 }
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.border = "1px solid rgba(225,0,0,0.18)";
-                el.style.boxShadow =
-                  "0 0 24px rgba(225,0,0,0.04), inset 0 0 40px rgba(225,0,0,0.02)";
-                el.style.transform = "translateY(0)";
+                el.style.borderColor = "rgba(225,0,0,0.18)";
+                el.style.boxShadow = "0 0 16px rgba(225,0,0,0.04)";
                 const iconWrap = el.querySelector(
                   ".contact-icon-wrap",
                 ) as HTMLElement;
                 if (iconWrap) {
                   iconWrap.style.background = "rgba(225,0,0,0.08)";
                   iconWrap.style.borderColor = "rgba(225,0,0,0.2)";
-                  iconWrap.style.boxShadow = "none";
                 }
               }}
             >
               {/* Icon circle */}
               <div
-                className="contact-icon-wrap flex items-center justify-center w-20 h-20 rounded-full transition-all duration-300"
+                className="contact-icon-wrap flex items-center justify-center w-20 h-20 rounded-full"
                 style={{
                   background: "rgba(225,0,0,0.08)",
                   border: "1px solid rgba(225,0,0,0.2)",
                   color: "var(--red-bright)",
-                  boxShadow: "none",
+                  transition: "background 0.3s, border-color 0.3s",
                 }}
               >
                 {ch.icon}
@@ -3069,66 +3271,83 @@ function Footer() {
 }
 
 // ── Temple Bell Sound ─────────────────────────────────────────────────────────
+function playBellSound() {
+  try {
+    const ctx = new (
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext
+    )();
+
+    // Resume in case the context starts suspended (required on mobile)
+    void ctx.resume().then(() => {
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.18, ctx.currentTime); // low & peaceful
+      masterGain.connect(ctx.destination);
+
+      // Bell is built from three partials: fundamental + harmonics
+      const partials: { freq: number; gain: number; decay: number }[] = [
+        { freq: 528, gain: 1.0, decay: 3.8 }, // fundamental (spiritual 528 Hz)
+        { freq: 1056, gain: 0.35, decay: 2.2 }, // 2nd harmonic
+        { freq: 1848, gain: 0.12, decay: 1.4 }, // upper shimmer
+      ];
+
+      for (const p of partials) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(p.freq, ctx.currentTime);
+
+        gain.gain.setValueAtTime(p.gain, ctx.currentTime);
+        // Exponential decay — bell tail fades to near-zero
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          ctx.currentTime + p.decay,
+        );
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + p.decay + 0.1);
+      }
+
+      // Close context after the longest tail finishes
+      setTimeout(
+        () => {
+          void ctx.close();
+        },
+        (3.8 + 0.5) * 1000,
+      );
+    });
+  } catch {
+    // Silently ignore if Web Audio is unavailable
+  }
+}
+
 function useTempleBell() {
   useEffect(() => {
-    // Play once after a short delay, respecting browser autoplay policy by
-    // synthesising the bell with Web Audio (no external file needed).
-    const timer = setTimeout(() => {
-      try {
-        const ctx = new (
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext })
-            .webkitAudioContext
-        )();
+    // Play on the first user interaction (click or touch).
+    // This satisfies mobile browser autoplay policies which require
+    // a user gesture before audio can be played.
+    let played = false;
 
-        // Resume in case the context starts suspended
-        void ctx.resume().then(() => {
-          const masterGain = ctx.createGain();
-          masterGain.gain.setValueAtTime(0.18, ctx.currentTime); // low & peaceful
-          masterGain.connect(ctx.destination);
+    const handleFirstInteraction = () => {
+      if (played) return;
+      played = true;
+      playBellSound();
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("touchstart", handleFirstInteraction);
+    };
 
-          // Bell is built from two partials: fundamental + bright harmonic
-          const partials: { freq: number; gain: number; decay: number }[] = [
-            { freq: 528, gain: 1.0, decay: 3.8 }, // fundamental (spiritual 528 Hz)
-            { freq: 1056, gain: 0.35, decay: 2.2 }, // 2nd harmonic
-            { freq: 1848, gain: 0.12, decay: 1.4 }, // upper shimmer
-          ];
+    document.addEventListener("click", handleFirstInteraction);
+    document.addEventListener("touchstart", handleFirstInteraction);
 
-          for (const p of partials) {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(p.freq, ctx.currentTime);
-
-            gain.gain.setValueAtTime(p.gain, ctx.currentTime);
-            // Exponential decay — bell tail fades to near-zero
-            gain.gain.exponentialRampToValueAtTime(
-              0.001,
-              ctx.currentTime + p.decay,
-            );
-
-            osc.connect(gain);
-            gain.connect(masterGain);
-
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + p.decay + 0.1);
-          }
-
-          // Close context after the longest tail finishes
-          setTimeout(
-            () => {
-              void ctx.close();
-            },
-            (3.8 + 0.5) * 1000,
-          );
-        });
-      } catch {
-        // Silently ignore if Web Audio is unavailable
-      }
-    }, 800); // slight delay so the page has settled
-
-    return () => clearTimeout(timer);
+    return () => {
+      document.removeEventListener("click", handleFirstInteraction);
+      document.removeEventListener("touchstart", handleFirstInteraction);
+    };
   }, []);
 }
 
