@@ -4847,6 +4847,307 @@ function Footer() {
   );
 }
 
+// ── Welcome Popup ─────────────────────────────────────────────────────────────
+function WelcomePopup() {
+  const [visible, setVisible] = useState(true);
+  const [closing, setClosing] = useState(false);
+
+  const dismiss = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => setVisible(false), 400);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => dismiss(), 8000);
+    return () => clearTimeout(timer);
+  }, [dismiss]);
+
+  if (!visible) return null;
+
+  const tools = [
+    {
+      icon: "▶",
+      label: "YouTube Thumbnail Downloader",
+      desc: "Download HD thumbnails from any YouTube video",
+    },
+    {
+      icon: "📸",
+      label: "Instagram Reel Downloader",
+      desc: "Save Instagram Reels with one click",
+    },
+    {
+      icon: "🖼",
+      label: "Image Converter",
+      desc: "Convert images between JPG, PNG and WEBP",
+    },
+  ];
+
+  return (
+    <>
+      <style>{`
+        @keyframes welcomeFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes welcomeFadeOut {
+          from { opacity: 1; }
+          to   { opacity: 0; }
+        }
+        @keyframes welcomeBackdrop {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes welcomeSlideUp {
+          from { opacity: 0; transform: translateY(32px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes welcomeToolIn {
+          from { opacity: 0; transform: translateX(-18px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes welcomePulse {
+          0%, 100% { box-shadow: 0 0 18px 4px rgba(200,0,0,0.45), 0 0 40px 10px rgba(180,0,0,0.18); }
+          50%       { box-shadow: 0 0 28px 8px rgba(220,0,0,0.65), 0 0 60px 16px rgba(200,0,0,0.28); }
+        }
+        .welcome-backdrop {
+          position: fixed; inset: 0; z-index: 9999;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
+        }
+      `}</style>
+
+      {/* Backdrop */}
+      <div
+        data-ocid="welcome.modal"
+        className="welcome-backdrop"
+        style={{
+          animation: closing
+            ? "welcomeFadeOut 0.4s ease forwards"
+            : "welcomeBackdrop 0.5s ease",
+        }}
+        onClick={dismiss}
+        onKeyDown={(e) => e.key === "Escape" && dismiss()}
+      >
+        {/* Card */}
+        <dialog
+          open
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          aria-label="Welcome popup"
+          style={{
+            background: "linear-gradient(160deg, #0d0d0d 0%, #110000 100%)",
+            border: "1px solid rgba(200,0,0,0.45)",
+            borderRadius: "16px",
+            padding: "2rem 2.2rem 1.8rem",
+            maxWidth: "420px",
+            width: "calc(100% - 2rem)",
+            animation:
+              "welcomeSlideUp 0.5s cubic-bezier(0.22,1,0.36,1), welcomePulse 3s ease-in-out 0.8s infinite",
+            position: "relative",
+          }}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            data-ocid="welcome.close_button"
+            onClick={dismiss}
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "14px",
+              background: "none",
+              border: "none",
+              color: "rgba(255,255,255,0.45)",
+              fontSize: "1.2rem",
+              cursor: "pointer",
+              lineHeight: 1,
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "#e00";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "rgba(255,255,255,0.45)";
+            }}
+            aria-label="Close welcome popup"
+          >
+            ✕
+          </button>
+
+          {/* Heading */}
+          <div style={{ textAlign: "center", marginBottom: "1.4rem" }}>
+            <div
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: "clamp(1.5rem, 5vw, 2rem)",
+                letterSpacing: "0.12em",
+                color: "#fff",
+                lineHeight: 1.1,
+              }}
+            >
+              WELCOME TO{" "}
+              <span
+                style={{
+                  color: "#e00",
+                  textShadow:
+                    "0 0 12px rgba(220,0,0,0.8), 0 0 30px rgba(180,0,0,0.4)",
+                }}
+              >
+                RUPESH THAKUR
+              </span>
+            </div>
+            <div
+              style={{
+                marginTop: "0.45rem",
+                fontSize: "0.78rem",
+                color: "rgba(255,255,255,0.45)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Official Personal Website
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div
+            style={{
+              height: "1px",
+              background:
+                "linear-gradient(90deg, transparent, rgba(200,0,0,0.5), transparent)",
+              marginBottom: "1.3rem",
+            }}
+          />
+
+          {/* Tools list */}
+          <div style={{ marginBottom: "1.4rem" }}>
+            <div
+              style={{
+                fontSize: "0.72rem",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.38)",
+                marginBottom: "0.8rem",
+              }}
+            >
+              Available Tools
+            </div>
+            {tools.map((tool, i) => (
+              <div
+                key={tool.label}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "0.8rem",
+                  marginBottom: i < tools.length - 1 ? "0.75rem" : 0,
+                  animation: `welcomeToolIn 0.5s ease ${0.3 + i * 0.12}s both`,
+                }}
+              >
+                {/* Icon bubble */}
+                <div
+                  style={{
+                    flexShrink: 0,
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    background: "rgba(180,0,0,0.15)",
+                    border: "1px solid rgba(200,0,0,0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1rem",
+                  }}
+                >
+                  {tool.icon}
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontSize: "0.88rem",
+                      fontWeight: 700,
+                      color: "#fff",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {tool.label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.74rem",
+                      color: "rgba(255,255,255,0.42)",
+                      marginTop: "1px",
+                    }}
+                  >
+                    {tool.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div
+            style={{
+              height: "1px",
+              background:
+                "linear-gradient(90deg, transparent, rgba(200,0,0,0.5), transparent)",
+              marginBottom: "1.1rem",
+            }}
+          />
+
+          {/* CTA */}
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                fontSize: "0.88rem",
+                color: "rgba(255,255,255,0.62)",
+                letterSpacing: "0.04em",
+                marginBottom: "1rem",
+              }}
+            >
+              ↓ Scroll down to use the tools
+            </div>
+            <button
+              type="button"
+              data-ocid="welcome.primary_button"
+              onClick={dismiss}
+              style={{
+                background: "linear-gradient(135deg, #c00 0%, #900 100%)",
+                border: "none",
+                color: "#fff",
+                padding: "0.55rem 2rem",
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow: "0 0 16px rgba(200,0,0,0.5)",
+                transition: "box-shadow 0.2s, transform 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 0 28px rgba(220,0,0,0.75)";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "scale(1.04)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                  "0 0 16px rgba(200,0,0,0.5)";
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "scale(1)";
+              }}
+            >
+              Explore the Site
+            </button>
+          </div>
+        </dialog>
+      </div>
+    </>
+  );
+}
+
 // ── Temple Bell Sound ─────────────────────────────────────────────────────────
 function playBellSound() {
   try {
@@ -4934,6 +5235,7 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ background: "#000", color: "#fff" }}>
       <SmokeCanvas />
+      <WelcomePopup />
       <JaiShreeRamIntro />
       <Toaster
         position="top-right"
