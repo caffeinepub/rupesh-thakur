@@ -486,6 +486,7 @@ function Navigation() {
               "skills",
               "vision",
               "achievements",
+              "inspiration",
               "map",
               "contact",
             ].map((id) => (
@@ -524,18 +525,24 @@ function Navigation() {
         }}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
-          {["about", "skills", "vision", "achievements", "map", "contact"].map(
-            (id) => (
-              <button
-                type="button"
-                key={id}
-                onClick={() => scrollTo(id === "map" ? "visitor-map" : id)}
-                className="nav-link text-left py-2"
-              >
-                {id}
-              </button>
-            ),
-          )}
+          {[
+            "about",
+            "skills",
+            "vision",
+            "achievements",
+            "inspiration",
+            "map",
+            "contact",
+          ].map((id) => (
+            <button
+              type="button"
+              key={id}
+              onClick={() => scrollTo(id === "map" ? "visitor-map" : id)}
+              className="nav-link text-left py-2"
+            >
+              {id}
+            </button>
+          ))}
         </div>
       </div>
     </nav>
@@ -2472,6 +2479,286 @@ function VisitorMapSection() {
   );
 }
 
+// ── Daily Inspiration Section ─────────────────────────────────────────────────
+const DAILY_QUOTES = [
+  {
+    text: "Strength does not come from physical capacity. It comes from an indomitable will.",
+    author: "Mahatma Gandhi",
+  },
+  {
+    text: "The soul that is within me no man can degrade.",
+    author: "Frederick Douglass",
+  },
+  {
+    text: "He who has a why to live can bear almost any how.",
+    author: "Friedrich Nietzsche",
+  },
+  {
+    text: "The Lord is my strength and my shield; my heart trusts in him, and he helps me.",
+    author: "Psalm 28:7",
+  },
+  {
+    text: "In the middle of every difficulty lies opportunity.",
+    author: "Albert Einstein",
+  },
+  {
+    text: "Do not pray for an easy life, pray for the strength to endure a difficult one.",
+    author: "Bruce Lee",
+  },
+  {
+    text: "When you can't control what's happening, challenge yourself to control the way you respond. That is where your power is.",
+    author: "Unknown",
+  },
+  {
+    text: "The darkest hour has only sixty minutes.",
+    author: "Morris Mandel",
+  },
+  {
+    text: "Faith is taking the first step even when you don't see the whole staircase.",
+    author: "Martin Luther King Jr.",
+  },
+  {
+    text: "Out of difficulties grow miracles.",
+    author: "Jean de La Bruyère",
+  },
+  {
+    text: "The universe bends toward those who refuse to break.",
+    author: "Rupesh Thakur",
+  },
+  {
+    text: "Karm kar, phal ki chinta mat kar. Work with devotion — the divine takes care of the rest.",
+    author: "Bhagavad Gita",
+  },
+  {
+    text: "A diamond is just a piece of charcoal that handled stress exceptionally well.",
+    author: "Unknown",
+  },
+  {
+    text: "You were given this life because you are strong enough to live it.",
+    author: "Robin Sharma",
+  },
+  {
+    text: "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.",
+    author: "Christian D. Larson",
+  },
+];
+
+function DailyInspirationSection() {
+  const revealRef = useScrollReveal(0.2);
+  const [quote] = useState(
+    () => DAILY_QUOTES[Math.floor(Math.random() * DAILY_QUOTES.length)],
+  );
+
+  return (
+    <section
+      id="inspiration"
+      data-ocid="inspiration.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Saffron + dark atmospheric bloom */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 500,
+          background:
+            "radial-gradient(ellipse, rgba(255,140,0,0.10) 0%, rgba(200,80,0,0.05) 40%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Outer vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 35%, rgba(0,0,0,0.8) 100%)",
+        }}
+      />
+
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(255,140,0,0.45), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(255,140,0,0.45), transparent)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-12">
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal"
+        >
+          {/* Section label */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex items-center gap-3">
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "#FF8C00",
+                  boxShadow: "0 0 8px rgba(255,140,0,0.6)",
+                }}
+              />
+              <span
+                className="font-display text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "#FF8C00" }}
+              >
+                Daily Inspiration
+              </span>
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "#FF8C00",
+                  boxShadow: "0 0 8px rgba(255,140,0,0.6)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Section heading */}
+          <h2
+            className="font-bebas text-center tracking-wider mb-12"
+            style={{
+              fontSize: "clamp(2.4rem, 6vw, 5rem)",
+              color: "#fff",
+              textShadow: "0 0 30px rgba(255,140,0,0.15)",
+            }}
+          >
+            WORDS THAT{" "}
+            <span
+              style={{
+                color: "#FF8C00",
+                textShadow:
+                  "0 0 20px rgba(255,140,0,0.9), 0 0 55px rgba(255,120,0,0.45), 0 0 110px rgba(255,100,0,0.18)",
+              }}
+            >
+              IGNITE THE SOUL
+            </span>
+          </h2>
+
+          {/* Quote card */}
+          <div
+            data-ocid="inspiration.card"
+            className="relative p-10 md:p-14 text-center"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(18,8,0,0.97) 0%, rgba(8,5,0,0.99) 100%)",
+              border: "1px solid rgba(255,140,0,0.22)",
+              borderRadius: 4,
+              boxShadow:
+                "0 0 40px rgba(255,140,0,0.09), 0 0 100px rgba(255,100,0,0.04), inset 0 0 80px rgba(0,0,0,0.5)",
+            }}
+          >
+            {/* Corner accents — saffron */}
+            <div
+              className="absolute top-0 left-0 w-12 h-12 pointer-events-none"
+              style={{
+                borderTop: "2px solid rgba(255,140,0,0.7)",
+                borderLeft: "2px solid rgba(255,140,0,0.7)",
+                boxShadow: "0 0 10px rgba(255,140,0,0.25)",
+              }}
+            />
+            <div
+              className="absolute top-0 right-0 w-12 h-12 pointer-events-none"
+              style={{
+                borderTop: "2px solid rgba(255,140,0,0.7)",
+                borderRight: "2px solid rgba(255,140,0,0.7)",
+                boxShadow: "0 0 10px rgba(255,140,0,0.25)",
+              }}
+            />
+            <div
+              className="absolute bottom-0 left-0 w-12 h-12 pointer-events-none"
+              style={{
+                borderBottom: "2px solid rgba(255,140,0,0.7)",
+                borderLeft: "2px solid rgba(255,140,0,0.7)",
+                boxShadow: "0 0 10px rgba(255,140,0,0.25)",
+              }}
+            />
+            <div
+              className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none"
+              style={{
+                borderBottom: "2px solid rgba(255,140,0,0.7)",
+                borderRight: "2px solid rgba(255,140,0,0.7)",
+                boxShadow: "0 0 10px rgba(255,140,0,0.25)",
+              }}
+            />
+
+            {/* Decorative large quote mark */}
+            <div
+              className="font-bebas leading-none mb-4 select-none pointer-events-none"
+              style={{
+                fontSize: "clamp(5rem, 12vw, 9rem)",
+                color: "#FF8C00",
+                opacity: 0.12,
+                lineHeight: 0.75,
+              }}
+            >
+              "
+            </div>
+
+            {/* Quote text */}
+            <p
+              className="font-display font-semibold leading-relaxed mx-auto"
+              style={{
+                fontSize: "clamp(1.1rem, 2.2vw, 1.5rem)",
+                color: "rgba(255,255,255,0.93)",
+                lineHeight: 1.75,
+                fontStyle: "italic",
+                maxWidth: "700px",
+                letterSpacing: "0.01em",
+              }}
+            >
+              {quote.text}
+            </p>
+
+            {/* Saffron divider */}
+            <div
+              className="mx-auto mt-8 mb-6"
+              style={{
+                width: "clamp(80px, 15vw, 160px)",
+                height: "1px",
+                background:
+                  "linear-gradient(90deg, transparent, #FF8C00, rgba(255,180,50,0.9), #FF8C00, transparent)",
+                boxShadow:
+                  "0 0 8px rgba(255,140,0,0.7), 0 0 20px rgba(255,107,0,0.35)",
+              }}
+            />
+
+            {/* Author */}
+            <p
+              className="font-body text-sm tracking-widest uppercase"
+              style={{
+                color: "#FF8C00",
+                textShadow: "0 0 10px rgba(255,140,0,0.5)",
+                letterSpacing: "0.18em",
+              }}
+            >
+              — {quote.author}
+            </p>
+          </div>
+
+          {/* Subtext */}
+          <p
+            className="text-center mt-8 font-body text-xs tracking-widest uppercase"
+            style={{ color: "rgba(255,255,255,0.25)", letterSpacing: "0.15em" }}
+          >
+            A new quote greets you every visit
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── WhatsApp SVG Icon ─────────────────────────────────────────────────────────
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -2501,7 +2788,7 @@ function ContactSection() {
       label: "WhatsApp",
       sublabel: "Message directly",
       icon: <WhatsAppIcon size={32} />,
-      href: "https://wa.me/917902152365",
+      href: "https://wa.me/917902152365?text=Hello%20Rupesh%2C%20I%20visited%20your%20website%20and%20I%20would%20like%20to%20connect%20with%20you.",
     },
     {
       id: "instagram",
@@ -2870,6 +3157,7 @@ export default function App() {
         <SkillsSection />
         <VisionSection />
         <AchievementsSection />
+        <DailyInspirationSection />
         <VisitorMapSection />
         <VisitorCounterSection />
         <ContactSection />
