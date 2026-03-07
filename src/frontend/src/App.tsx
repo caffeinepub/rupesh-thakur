@@ -195,108 +195,6 @@ function useStaggerReveal(threshold = 0.1) {
   return ref;
 }
 
-// ── Jai Shree Ram Intro Overlay ───────────────────────────────────────────────
-function JaiShreeRamIntro() {
-  const [phase, setPhase] = useState<"in" | "hold" | "out" | "done">("in");
-
-  useEffect(() => {
-    // Fade in over 800ms, hold for 2s, fade out over 1.2s
-    const holdTimer = setTimeout(() => setPhase("hold"), 800);
-    const outTimer = setTimeout(() => setPhase("out"), 2800);
-    const doneTimer = setTimeout(() => setPhase("done"), 4000);
-    return () => {
-      clearTimeout(holdTimer);
-      clearTimeout(outTimer);
-      clearTimeout(doneTimer);
-    };
-  }, []);
-
-  if (phase === "done") return null;
-
-  const opacity = phase === "in" ? 0 : phase === "hold" ? 1 : 0;
-  const scale = phase === "in" ? 0.85 : phase === "hold" ? 1 : 1.05;
-  const transition =
-    phase === "in"
-      ? "opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.22,1,0.36,1)"
-      : phase === "out"
-        ? "opacity 1.2s ease-in, transform 1.2s ease-in"
-        : "none";
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        pointerEvents: "none",
-        background: "rgba(0,0,0,0.55)",
-        opacity,
-        transition:
-          phase === "in"
-            ? "opacity 0.8s ease-out"
-            : phase === "out"
-              ? "opacity 1.2s ease-in"
-              : "none",
-      }}
-    >
-      <div
-        style={{
-          transform: `scale(${scale})`,
-          transition,
-          textAlign: "center",
-          userSelect: "none",
-        }}
-      >
-        {/* Ambient saffron bloom behind text */}
-        <div
-          style={{
-            position: "absolute",
-            inset: "-60px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(ellipse at center, rgba(255,153,0,0.35) 0%, rgba(255,100,0,0.15) 50%, transparent 75%)",
-            filter: "blur(24px)",
-            zIndex: -1,
-          }}
-        />
-        <div
-          style={{
-            fontFamily: "'Bebas Neue', 'Georgia', serif",
-            fontSize: "clamp(2.8rem, 8vw, 5.5rem)",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            color: "#FF9500",
-            textShadow: [
-              "0 0 12px rgba(255,153,0,0.95)",
-              "0 0 28px rgba(255,130,0,0.75)",
-              "0 0 55px rgba(255,100,0,0.55)",
-              "0 0 90px rgba(255,80,0,0.35)",
-            ].join(", "),
-            lineHeight: 1.1,
-          }}
-        >
-          🚩 Jai Shree Ram 🚩
-        </div>
-        {/* Thin saffron underline */}
-        <div
-          style={{
-            margin: "10px auto 0",
-            width: "60%",
-            height: "2px",
-            borderRadius: "1px",
-            background:
-              "linear-gradient(90deg, transparent, #FF9500 30%, #FF6200 70%, transparent)",
-            boxShadow: "0 0 10px rgba(255,153,0,0.7)",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Visitor Map: pre-computed land dot grid (module level for perf) ──────────
 interface LandDot {
   cx: number;
@@ -5236,7 +5134,7 @@ export default function App() {
     <div className="min-h-screen" style={{ background: "#000", color: "#fff" }}>
       <SmokeCanvas />
       <WelcomePopup />
-      <JaiShreeRamIntro />
+
       <Toaster
         position="top-right"
         toastOptions={{
