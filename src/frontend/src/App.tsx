@@ -16,6 +16,7 @@ import {
   Users,
   UsersRound,
   X,
+  Youtube,
   Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -388,6 +389,7 @@ function Navigation() {
               "map",
               "tools",
               "ig-reel",
+              "yt-video",
               "img-converter",
               "contact",
             ].map((id) => (
@@ -408,9 +410,11 @@ function Navigation() {
               >
                 {id === "ig-reel"
                   ? "ig reel"
-                  : id === "img-converter"
-                    ? "img convert"
-                    : id}
+                  : id === "yt-video"
+                    ? "yt video"
+                    : id === "img-converter"
+                      ? "img convert"
+                      : id}
               </button>
             ))}
           </div>
@@ -447,6 +451,7 @@ function Navigation() {
             "map",
             "tools",
             "ig-reel",
+            "yt-video",
             "img-converter",
             "contact",
           ].map((id) => (
@@ -466,9 +471,11 @@ function Navigation() {
             >
               {id === "ig-reel"
                 ? "ig reel"
-                : id === "img-converter"
-                  ? "img convert"
-                  : id}
+                : id === "yt-video"
+                  ? "yt video"
+                  : id === "img-converter"
+                    ? "img convert"
+                    : id}
             </button>
           ))}
         </div>
@@ -3514,8 +3521,7 @@ function InstagramReelDownloaderSection() {
               maxWidth: "480px",
             }}
           >
-            Paste any Instagram Reel or video link below. We'll take you
-            directly to the reel so you can save it to your device.
+            Paste your Instagram Reel link below to download it instantly.
           </p>
 
           {/* Input form */}
@@ -3722,13 +3728,13 @@ function InstagramReelDownloaderSection() {
                   </p>
                   <ol className="text-left space-y-2">
                     {[
-                      'Click "Open Reel" to open it on Instagram.',
-                      "On mobile: tap the three dots (⋯) → Save to device.",
-                      "On desktop: right-click the video → Save video as…",
-                      "Or use the Instagram app's built-in save/bookmark.",
-                    ].map((step, i) => (
+                      'Click "Download Reel" to open the downloader.',
+                      "Paste your Instagram link in the downloader.",
+                      "Select quality and click Download.",
+                      "Save the video to your device.",
+                    ].map((stepText, i) => (
                       <li
-                        key={step}
+                        key={stepText}
                         className="font-body text-sm flex items-start gap-2"
                         style={{ color: "rgba(255,255,255,0.65)" }}
                       >
@@ -3742,7 +3748,7 @@ function InstagramReelDownloaderSection() {
                         >
                           {i + 1}.
                         </span>
-                        {step}
+                        {stepText}
                       </li>
                     ))}
                   </ol>
@@ -3751,10 +3757,10 @@ function InstagramReelDownloaderSection() {
                 {/* Action buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
                   <a
-                    href={url.trim()}
+                    href="https://snapinsta.app/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    data-ocid="ig-reel.open_modal_button"
+                    data-ocid="ig-reel.primary_button"
                     className="btn-red font-bebas tracking-widest uppercase flex-1 flex items-center justify-center gap-2"
                     style={{
                       padding: "13px 20px",
@@ -3764,13 +3770,28 @@ function InstagramReelDownloaderSection() {
                     }}
                   >
                     <Instagram size={18} />
-                    OPEN REEL
+                    DOWNLOAD REEL
+                  </a>
+                  <a
+                    href={url.trim()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ocid="ig-reel.secondary_button"
+                    className="btn-outline-red font-bebas tracking-widest uppercase flex-1 flex items-center justify-center gap-2"
+                    style={{
+                      padding: "13px 20px",
+                      fontSize: "1rem",
+                      borderRadius: 2,
+                      textDecoration: "none",
+                    }}
+                  >
+                    OPEN ON INSTAGRAM
                   </a>
                   <button
                     type="button"
                     data-ocid="ig-reel.cancel_button"
                     onClick={handleReset}
-                    className="btn-outline-red font-bebas tracking-widest uppercase flex-1"
+                    className="btn-outline-red font-bebas tracking-widest uppercase"
                     style={{
                       padding: "13px 20px",
                       fontSize: "1rem",
@@ -3789,8 +3810,451 @@ function InstagramReelDownloaderSection() {
             className="text-center mt-8 font-body text-xs"
             style={{ color: "rgba(255,255,255,0.22)", lineHeight: 1.7 }}
           >
-            Instagram does not allow direct video downloads from browsers. Use
-            the "Open Reel" button and save from within the Instagram app.
+            Uses Snapinsta — a free, trusted Instagram video downloader.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── YouTube Video Downloader Section ─────────────────────────────────────────
+function YouTubeVideoDownloaderSection() {
+  const revealRef = useScrollReveal(0.15);
+  const [url, setUrl] = useState("");
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"idle" | "ready">("idle");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setVideoId(null);
+    setStep("idle");
+    const id = extractYouTubeId(url.trim());
+    if (!id) {
+      setError(
+        "Invalid YouTube URL. Paste a full YouTube link (watch, shorts, or youtu.be).",
+      );
+      return;
+    }
+    setVideoId(id);
+    setStep("ready");
+  };
+
+  const handleReset = () => {
+    setUrl("");
+    setVideoId(null);
+    setError(null);
+    setStep("idle");
+  };
+
+  return (
+    <section
+      id="yt-video"
+      data-ocid="yt-video.section"
+      className="relative py-24 md:py-36 overflow-hidden"
+      style={{ background: "#000" }}
+    >
+      {/* Top divider */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+      {/* Bottom divider */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+        }}
+      />
+
+      {/* Atmospheric red radial */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{
+          width: 900,
+          height: 500,
+          background:
+            "radial-gradient(ellipse, rgba(225,0,0,0.1) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Outer dark vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 lg:px-12">
+        <div
+          ref={revealRef as React.RefObject<HTMLDivElement>}
+          className="scroll-reveal"
+        >
+          {/* Section label */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-3">
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+              <span
+                className="font-display text-xs font-semibold tracking-widest uppercase"
+                style={{ color: "var(--red-bright)" }}
+              >
+                Free Tool
+              </span>
+              <span
+                className="h-px w-12"
+                style={{
+                  background: "var(--red-bright)",
+                  boxShadow: "0 0 8px rgba(225,0,0,0.5)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Section heading */}
+          <h2
+            className="font-bebas text-center tracking-wider mb-4 red-underline-center"
+            style={{
+              fontSize: "clamp(2rem, 6vw, 4.5rem)",
+              color: "#fff",
+              textShadow:
+                "0 0 30px rgba(225,0,0,0.2), 0 0 80px rgba(225,0,0,0.08)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            YOUTUBE VIDEO DOWNLOADER
+          </h2>
+          <p
+            className="text-center font-body mt-4 mb-12 mx-auto"
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "1rem",
+              maxWidth: "480px",
+            }}
+          >
+            Paste any YouTube video link to download it in HD quality.
+          </p>
+
+          {/* Input form */}
+          <form onSubmit={handleSubmit} className="mb-10">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type="url"
+                  data-ocid="yt-video.input"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full font-body"
+                  aria-label="YouTube video URL"
+                  style={{
+                    background: "rgba(8,8,8,0.97)",
+                    border: "1px solid rgba(225,0,0,0.25)",
+                    borderRadius: 2,
+                    padding: "14px 18px",
+                    color: "#fff",
+                    fontSize: "0.95rem",
+                    outline: "none",
+                    letterSpacing: "0.01em",
+                    boxShadow:
+                      "0 0 12px rgba(225,0,0,0.06), inset 0 0 30px rgba(0,0,0,0.5)",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(225,0,0,0.7)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 2px rgba(225,0,0,0.15), 0 0 16px rgba(225,0,0,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(225,0,0,0.25)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 12px rgba(225,0,0,0.06), inset 0 0 30px rgba(0,0,0,0.5)";
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                data-ocid="yt-video.submit_button"
+                className="btn-red font-bebas tracking-widest uppercase"
+                style={{
+                  padding: "14px 28px",
+                  fontSize: "1rem",
+                  borderRadius: 2,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                GET VIDEO
+              </button>
+            </div>
+          </form>
+
+          {/* Error state */}
+          {error && (
+            <div
+              data-ocid="yt-video.error_state"
+              className="flex items-center gap-3 mb-8 p-4"
+              style={{
+                background: "rgba(225,0,0,0.07)",
+                border: "1px solid rgba(225,0,0,0.3)",
+                borderRadius: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "var(--red-bright)",
+                  flexShrink: 0,
+                  boxShadow: "0 0 6px rgba(225,0,0,0.8)",
+                }}
+              />
+              <p
+                className="font-body text-sm"
+                style={{ color: "rgba(255,100,100,0.95)" }}
+              >
+                {error}
+              </p>
+            </div>
+          )}
+
+          {/* Result card */}
+          {step === "ready" && videoId && (
+            <div
+              data-ocid="yt-video.card"
+              className="relative p-8 md:p-10"
+              style={{
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(225,0,0,0.25)",
+                borderRadius: 4,
+                boxShadow:
+                  "0 0 30px rgba(225,0,0,0.12), 0 0 80px rgba(225,0,0,0.05), inset 0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(225,0,0,0.08)",
+              }}
+            >
+              {/* Corner accents */}
+              <div
+                className="absolute top-0 left-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderTop: "3px solid var(--red-bright)",
+                  borderLeft: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute top-0 right-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderTop: "3px solid var(--red-bright)",
+                  borderRight: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderBottom: "3px solid var(--red-bright)",
+                  borderLeft: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+              <div
+                className="absolute bottom-0 right-0 w-10 h-10 pointer-events-none z-10"
+                style={{
+                  borderBottom: "3px solid var(--red-bright)",
+                  borderRight: "3px solid var(--red-bright)",
+                  boxShadow: "0 0 12px rgba(225,0,0,0.4)",
+                }}
+              />
+
+              {/* YouTube icon + video ID */}
+              <div className="flex flex-col items-center text-center gap-5">
+                {/* YouTube icon circle */}
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: "50%",
+                    background: "rgba(225,0,0,0.08)",
+                    border: "2px solid rgba(225,0,0,0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow:
+                      "0 0 24px rgba(225,0,0,0.25), 0 0 60px rgba(225,0,0,0.08)",
+                    animation: "profile-glow-pulse 3s ease-in-out infinite",
+                  }}
+                >
+                  <Youtube size={30} style={{ color: "var(--red-bright)" }} />
+                </div>
+
+                <div>
+                  <p
+                    className="font-bebas tracking-widest mb-1"
+                    style={{
+                      fontSize: "1.4rem",
+                      color: "#fff",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    Video Detected
+                  </p>
+                  <p
+                    className="font-body text-xs tracking-widest uppercase"
+                    style={{ color: "rgba(255,255,255,0.35)" }}
+                  >
+                    Video ID:{" "}
+                    <span style={{ color: "rgba(225,0,0,0.8)" }}>
+                      {videoId}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Thumbnail preview */}
+                <div
+                  style={{
+                    maxWidth: 400,
+                    width: "100%",
+                    border: "1px solid rgba(225,0,0,0.3)",
+                    borderRadius: 4,
+                    overflow: "hidden",
+                  }}
+                >
+                  <img
+                    src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                    alt="YouTube video thumbnail"
+                    style={{ width: "100%", display: "block" }}
+                  />
+                </div>
+
+                {/* Divider */}
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: 360,
+                    height: 1,
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(225,0,0,0.4), transparent)",
+                  }}
+                />
+
+                {/* Instructions */}
+                <div
+                  className="w-full max-w-lg"
+                  style={{
+                    background: "rgba(225,0,0,0.05)",
+                    border: "1px solid rgba(225,0,0,0.15)",
+                    borderRadius: 4,
+                    padding: "16px 20px",
+                  }}
+                >
+                  <p
+                    className="font-bebas tracking-widest mb-3"
+                    style={{ color: "var(--red-bright)", fontSize: "1rem" }}
+                  >
+                    HOW TO DOWNLOAD
+                  </p>
+                  <ol className="text-left space-y-2">
+                    {[
+                      'Click "Download Video" to open the downloader.',
+                      "Select your preferred quality (HD, 720p, etc.).",
+                      "Click Download and wait for processing.",
+                      "Save the video to your device.",
+                    ].map((stepText, i) => (
+                      <li
+                        key={stepText}
+                        className="font-body text-sm flex items-start gap-2"
+                        style={{ color: "rgba(255,255,255,0.65)" }}
+                      >
+                        <span
+                          style={{
+                            color: "var(--red-bright)",
+                            fontWeight: 700,
+                            flexShrink: 0,
+                            minWidth: 16,
+                          }}
+                        >
+                          {i + 1}.
+                        </span>
+                        {stepText}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                  <a
+                    href="https://cobalt.tools/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ocid="yt-video.primary_button"
+                    className="btn-red font-bebas tracking-widest uppercase flex-1 flex items-center justify-center gap-2"
+                    style={{
+                      padding: "13px 20px",
+                      fontSize: "1rem",
+                      borderRadius: 2,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Youtube size={18} />
+                    DOWNLOAD VIDEO
+                  </a>
+                  <a
+                    href={`https://www.youtube.com/watch?v=${videoId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ocid="yt-video.secondary_button"
+                    className="btn-outline-red font-bebas tracking-widest uppercase flex-1 flex items-center justify-center gap-2"
+                    style={{
+                      padding: "13px 20px",
+                      fontSize: "1rem",
+                      borderRadius: 2,
+                      textDecoration: "none",
+                    }}
+                  >
+                    OPEN ON YOUTUBE
+                  </a>
+                  <button
+                    type="button"
+                    data-ocid="yt-video.cancel_button"
+                    onClick={handleReset}
+                    className="btn-outline-red font-bebas tracking-widest uppercase"
+                    style={{
+                      padding: "13px 20px",
+                      fontSize: "1rem",
+                      borderRadius: 2,
+                    }}
+                  >
+                    RESET
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Note */}
+          <p
+            className="text-center mt-8 font-body text-xs"
+            style={{ color: "rgba(255,255,255,0.22)", lineHeight: 1.7 }}
+          >
+            Uses Cobalt — a free, open-source video downloader. No ads, no
+            tracking.
           </p>
         </div>
       </div>
@@ -4750,10 +5214,24 @@ function WelcomePopup() {
   const [visible, setVisible] = useState(true);
   const [closing, setClosing] = useState(false);
 
+  const scrollToTools = useCallback(() => {
+    const el = document.getElementById("yt-thumb");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
+
   const dismiss = useCallback(() => {
     setClosing(true);
     setTimeout(() => setVisible(false), 400);
   }, []);
+
+  const dismissAndScroll = useCallback(() => {
+    setClosing(true);
+    // Start scroll immediately so the motion happens during the fade-out
+    scrollToTools();
+    setTimeout(() => setVisible(false), 400);
+  }, [scrollToTools]);
 
   useEffect(() => {
     const timer = setTimeout(() => dismiss(), 8000);
@@ -4772,6 +5250,11 @@ function WelcomePopup() {
       icon: "📸",
       label: "Instagram Reel Downloader",
       desc: "Save Instagram Reels with one click",
+    },
+    {
+      icon: "▶️",
+      label: "YouTube Video Downloader",
+      desc: "Download YouTube videos in HD quality",
     },
     {
       icon: "🖼",
@@ -4822,15 +5305,22 @@ function WelcomePopup() {
           animation: closing
             ? "welcomeFadeOut 0.4s ease forwards"
             : "welcomeBackdrop 0.5s ease",
+          cursor: "pointer",
         }}
-        onClick={dismiss}
+        onClick={dismissAndScroll}
         onKeyDown={(e) => e.key === "Escape" && dismiss()}
       >
         {/* Card */}
         <dialog
           open
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            dismissAndScroll();
+          }}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === "Enter" || e.key === " ") dismissAndScroll();
+          }}
           aria-label="Welcome popup"
           style={{
             background: "linear-gradient(160deg, #0d0d0d 0%, #110000 100%)",
@@ -4842,13 +5332,17 @@ function WelcomePopup() {
             animation:
               "welcomeSlideUp 0.5s cubic-bezier(0.22,1,0.36,1), welcomePulse 3s ease-in-out 0.8s infinite",
             position: "relative",
+            cursor: "pointer",
           }}
         >
           {/* Close button */}
           <button
             type="button"
             data-ocid="welcome.close_button"
-            onClick={dismiss}
+            onClick={(e) => {
+              e.stopPropagation();
+              dismiss();
+            }}
             style={{
               position: "absolute",
               top: "12px",
@@ -5004,12 +5498,15 @@ function WelcomePopup() {
                 marginBottom: "1rem",
               }}
             >
-              ↓ Scroll down to use the tools
+              ↓ Click anywhere or press the button to jump to the tools
             </div>
             <button
               type="button"
               data-ocid="welcome.primary_button"
-              onClick={dismiss}
+              onClick={(e) => {
+                e.stopPropagation();
+                dismissAndScroll();
+              }}
               style={{
                 background: "linear-gradient(135deg, #c00 0%, #900 100%)",
                 border: "none",
@@ -5158,6 +5655,7 @@ export default function App() {
         <VisitorCounterSection />
         <YouTubeThumbnailSection />
         <InstagramReelDownloaderSection />
+        <YouTubeVideoDownloaderSection />
         <ImageConverterSection />
         <ContactSection />
       </main>
