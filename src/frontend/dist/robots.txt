@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rupeshthakur.icp0.io/sitemap.xml
